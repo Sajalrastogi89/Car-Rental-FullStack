@@ -1,0 +1,59 @@
+<user-navbar></user-navbar>
+
+<div class="container" ng-init="init()">
+ 
+
+  <div class="row">
+    <div class="col-md-6 col-md-offset-3">
+      <!-- Profile Panel -->
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fa fa-user"></i> User Profile
+            <span class="pull-right">
+              <i class="fa fa-id-badge"></i> {{user.role | uppercase}}
+            </span>
+          </h3>
+        </div>
+        
+        <div class="panel-body">
+          <div class="text-center">
+            <!-- Profile Image -->
+            <img ng-src="assets\img\default.png" alt="User Profile" 
+                 class="img-circle img-thumbnail" 
+                 style="max-width: 150px; margin-bottom: 20px;">
+            
+            <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+          </div>
+          
+          <hr>
+          
+          <!-- User Details -->
+          <dl class="dl-horizontal">
+            <dt><i class="fa fa-envelope"></i> Email:</dt>
+            <dd>{{user.email}}</dd>
+            
+            <dt><i class="fa fa-phone"></i> Phone:</dt>
+            <dd>{{user.phone || 'Not provided'}}</dd>
+            
+            <dt><i class="fa fa-user-circle"></i> Role:</dt>
+            <dd>{{user.role}}</dd>
+            
+            <dt><i class="fa fa-calendar"></i> Joined:</dt>
+            <dd>{{user.createdAt}}</dd>
+            
+          </dl>
+          
+          <hr>
+          
+          <!-- Logout Button -->
+          <div class="text-center">
+            <button class="btn btn-danger btn-lg" ng-click="logout()">
+               Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

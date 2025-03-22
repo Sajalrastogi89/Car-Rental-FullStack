@@ -1,0 +1,254 @@
+<user-navbar></user-navbar>
+
+<div class="container" ng-init="init()">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="fa fa-calendar-check-o"></i> My Bookings</h1>
+  </div>
+
+  <!-- Loading State -->
+  <div class="text-center" ng-show="isLoading">
+    <uib-progress>
+      <uib-bar value="100" type="info" class="progress-striped active">
+        <span>Loading bookings...</span>
+      </uib-bar>
+    </uib-progress>
+  </div>
+
+  <!-- Filter and Sort Controls - All in one row -->
+  <div class="panel panel-default" ng-hide="isLoading">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fa fa-filter"></i> Filter & Sort</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <!-- Search Bar -->
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="search"><i class="fa fa-search"></i> Search Car:</label>
+            <div class="input-group">
+              <span class="input-group-addon"
+                ><i class="fa fa-search"></i
+              ></span>
+              <input
+                type="text"
+                id="search"
+                class="form-control"
+                placeholder="Search by car name"
+                ng-model="searchQuery"
+              />
+            </div>
+          </div>
+        </div>
+
+       
+
+        <!-- Filter By Category -->
+        <div class="col-md-2">
+          <div class="form-group">
+            <label for="categoryFilter"
+              ><i class="fa fa-car"></i> Category:</label
+            >
+            <select
+              id="categoryFilter"
+              class="form-control"
+              ng-model="category"
+            >
+              <option value="">All Types</option>
+              <option>Sedan</option>
+              <option>SUV</option>
+              <option>Hatchback</option>
+              <option>Luxury</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter By Payment -->
+        <div class="col-md-2">
+          <div class="form-group">
+            <label for="paymentFilter"
+              ><i class="fa fa-credit-card"></i> Payment:</label
+            >
+            <select
+              id="paymentFilter"
+              class="form-control"
+              ng-model="paymentFilter"
+            >
+              <option value="">All</option>
+              <option value="true">Paid</option>
+              <option value="false">Unpaid</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sort By -->
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="sort"><i class="fa fa-sort"></i> Sort By:</label>
+            <select id="sort" class="form-control" ng-model="selectedSort">
+              <option value="car.startDate">Start Date</option>
+              <option value="-car.startDate">Start Date (Descending)</option>
+              <option value="bidAmount" selected>Price: Low to High</option>
+              <option value="-bidAmount">Price: High to Low</option>
+              <option value="car.name">Car Name (A-Z)</option>
+              <option value="-car.name">Car Name (Z-A)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Bookings Message -->
+  <div
+    class="alert alert-info"
+    ng-if="!isLoading && (!bookings || bookings.length === 0)"
+  >
+    <i class="fa fa-info-circle"></i> You don't have any bookings yet.
+  </div>
+
+  <!-- Bookings List with Accordion -->
+  <div ng-hide="isLoading">
+        <uib-accordion>
+          <div
+            uib-accordion-group
+            is-open="status.open"
+            class="panel-default"
+            ng-repeat="booking in filteredBookings = (bookings | filter:searchQuery | filter:{paymentStatus:paymentFilter} | filter:{car:{category:category}} | orderBy:selectedSort)"
+          >
+            <!-- Accordion Heading -->
+            <uib-accordion-heading>
+              <div class="row">
+                <div class="col-xs-8">
+                  <i class="fa fa-car"></i> {{booking.car.name}}
+                  <!-- Payment Status Label -->
+                    <span
+                    class="label"
+                    ng-class="{'label-success': booking.paymentStatus, 
+                            'label-danger': !booking.paymentStatus}"
+                    >
+                    {{booking.paymentStatus ? 'Paid' : 'Unpaid'}}
+                    </span>
+                </div>
+                <div class="col-xs-4 text-right">
+                  <span class="label label-primary"
+                    >{{booking.car.basePrice | currency:"₹"}}</span
+                  >
+                  <span class="text-muted"
+                    ><small
+                      >{{booking.car.startDate | date:'MMM d, y'}}</small
+                    ></span
+                  >
+                  <small
+                    ><i
+                      class="pull-right glyphicon"
+                      ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"
+                    ></i
+                  ></small>
+                </div>
+              </div>
+            </uib-accordion-heading>
+
+            <!-- Accordion Content -->
+            <div class="row">
+              <!-- Car Image -->
+              <div class="col-md-3 text-center">
+                <img
+                  ng-src="{{ booking.car.image }}"
+                  alt="{{ booking.car.name }}"
+                  class="img-thumbnail img-responsive"
+                  style="
+                    max-height: 180px;
+                    max-width: 100%;
+                    margin-top: 10px;
+                    object-fit: cover;
+                  "
+                />
+
+               
+                <h5 class="text-center margin-top-10">
+                  {{ booking.car.name }}
+                </h5>
+              </div>
+
+              <!-- Car Details -->
+              <div class="col-md-5">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">
+                      <i class="fa fa-info-circle"></i> Car Details
+                    </h4>
+                  </div>
+                  <ul class="list-group">
+                    <li class="list-group-item">
+                      <span class="badge">{{booking.car.category}}</span>
+                      <i class="fa fa-tag"></i> Category
+                    </li>
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{booking.car.basePrice | currency:"₹"}}</span
+                      >
+                      <i class="fa fa-money"></i> Base Price
+                    </li>
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{booking.car.pricePerKm | currency:"₹"}}</span
+                      >
+                      <i class="fa fa-road"></i> Price per Km
+                    </li>
+                    <!-- New Field: Seating Capacity -->
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{booking.car.seatingCapacity || 4}} persons</span
+                      >
+                      <i class="fa fa-users"></i> Seating Capacity
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Booking Details -->
+              <div class="col-md-4">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">
+                      <i class="fa fa-calendar"></i> Booking Period
+                    </h4>
+                  </div>
+                  <ul class="list-group">
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{booking.car.startDate | date:'dd-MM-yyyy'}}</span
+                      >
+                      <i class="fa fa-calendar-plus-o"></i> Start Date
+                    </li>
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{booking.car.endDate | date:'dd-MM-yyyy'}}</span
+                      >
+                      <i class="fa fa-calendar-check-o"></i> End Date
+                    </li>
+                    <li class="list-group-item">
+                      <span class="badge"
+                        >{{calculateDays(booking.car.startDate,
+                        booking.car.endDate)}} days</span
+                      >
+                      <i class="fa fa-clock-o"></i> Duration
+                    </li>
+                    <li class="list-group-item">
+                      <span
+                        class="badge"
+                        ng-class="{'label-success': booking.paymentStatus, 'label-danger': !booking.paymentStatus}"
+                      >
+                        {{booking.paymentStatus ? 'Paid' : 'Unpaid'}}
+                      </span>
+                      <i class="fa fa-credit-card"></i> Payment Status
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </uib-accordion>
+  </div>
+</div>

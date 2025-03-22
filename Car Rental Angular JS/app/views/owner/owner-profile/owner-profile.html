@@ -1,0 +1,66 @@
+<owner-navbar></owner-navbar>
+
+<div class="container" ng-init="init()">
+  <!-- Loading State -->
+  <div class="text-center" ng-show="isLoading">
+    <uib-progress>
+      <uib-bar value="100" type="info" class="progress-striped active">
+        <span>Loading profile...</span>
+      </uib-bar>
+    </uib-progress>
+  </div>
+
+  <div class="row" ng-show="!isLoading">
+    <div class="col-md-6 col-md-offset-3">
+      <!-- Profile Panel -->
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fa fa-owner"></i> owner Profile
+            <span class="pull-right">
+              <i class="fa fa-id-badge"></i> {{owner.role | uppercase}}
+            </span>
+          </h3>
+        </div>
+        
+        <div class="panel-body">
+          <div class="text-center">
+            <!-- Profile Image -->
+            <img ng-src="assets\img\default.png" alt="owner Profile" 
+                 class="img-circle img-thumbnail" 
+                 style="max-width: 150px; margin-bottom: 20px;">
+            
+            <h2>{{ owner.firstName }} {{ owner.lastName }}</h2>
+          </div>
+          
+          <hr>
+          
+          <!-- owner Details -->
+          <dl class="dl-horizontal">
+            <dt><i class="fa fa-envelope"></i> Email:</dt>
+            <dd>{{owner.email}}</dd>
+            
+            <dt><i class="fa fa-phone"></i> Phone:</dt>
+            <dd>{{owner.phone || 'Not provided'}}</dd>
+            
+            <dt><i class="fa fa-owner-circle"></i> Role:</dt>
+            <dd>{{owner.role}}</dd>
+            
+            <dt><i class="fa fa-calendar"></i> Joined:</dt>
+            <dd>{{owner.createdAt | date:'mediumDate'}}</dd>
+            
+          </dl>
+          
+          <hr>
+          
+          <!-- Logout Button -->
+          <div class="text-center">
+            <button class="btn btn-danger btn-lg" ng-click="logout()">
+               Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

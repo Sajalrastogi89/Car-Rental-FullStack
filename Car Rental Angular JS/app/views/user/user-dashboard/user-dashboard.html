@@ -1,0 +1,133 @@
+<user-navbar></user-navbar>
+
+<div class="container" ng-init="init()">
+  <!-- Page Header with Filters -->
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fa fa-car"></i> Find Your Perfect Ride</h3>
+    </div>
+    <div class="panel-body">
+      <!-- All filters in one row with specific widths -->
+      <div class="row">
+        <!-- Search Box -->
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <i class="fa fa-search"></i>
+            </span>
+            <input
+              type="text"
+              class="form-control"
+              ng-model="searchText"
+              placeholder="Search..."
+            />
+          </div>
+        </div>
+
+        <!-- Fuel Type Filter -->
+        <div class="col-md-2">
+          <div class="input-group">
+            <span class="input-group-addon" style="min-width: 40px">
+              <i class="fa fa-tint"></i>
+            </span>
+            <select class="form-control" ng-model="fuelFilter">
+              <option value="">All Fuel Types</option>
+              <option ng-repeat="type in fuelTypes" value="{{type}}">
+                {{type}}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- City Filter -->
+        <div class="col-md-2">
+          <div class="input-group">
+            <span class="input-group-addon" style="min-width: 40px">
+              <i class="fa fa-map-marker"></i>
+            </span>
+            <select 
+              class="form-control" 
+              ng-model="selectedCity"
+              ng-options="city for city in cities"
+              ng-change="filterCarUsingSelectedCity()">
+            </select>
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-md-2">
+          <div class="input-group">
+            <span class="input-group-addon" style="min-width: 40px">
+              <i class="fa fa-tag"></i>
+            </span>
+            <select class="form-control" ng-model="categoryFilter">
+              <option value="">All Categories</option>
+              <option ng-repeat="category in categories" value="{{category}}">
+                {{category}}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sort By Dropdown -->
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-addon" style="min-width: 40px">
+              <i class="fa fa-sort"></i>
+            </span>
+            <select class="form-control" ng-model="sortOption">
+              <option ng-repeat="option in sortOptions" value="{{option.value}}">
+                {{option.label}}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- City Title -->
+  <div class="page-header">
+    <h2>
+      <i class="fa fa-map-marker text-danger"></i> 
+      {{selectedCity || 'All Cities'}} Cars
+      <small ng-if="filteredCars.length">{{filteredCars.length}} available</small>
+    </h2>
+  </div>
+
+  <!-- Loading State -->
+  <div class="text-center" ng-show="isLoading">
+    <uib-progress>
+      <uib-bar value="100" type="info" class="progress-striped active">
+        <span>Loading cars...</span>
+      </uib-bar>
+    </uib-progress>
+    <h4><i class="fa fa-spinner fa-spin"></i> Finding available cars...</h4>
+  </div>
+
+  <!-- No Cars Found State -->
+  <div ng-show="!isLoading && filteredCars.length === 0">
+    <div uib-alert class="alert-info text-center">
+      <h3><i class="fa fa-info-circle"></i> No cars available</h3>
+      <p>There are no cars matching your current filters. Try adjusting your search criteria.</p>
+    </div>
+  </div>
+  
+  <!-- Car Cards Grid with Angular Pipes for Filtering -->
+  <div class="row" ng-hide="isLoading">
+    <div class="col-md-4" 
+         ng-repeat="car in filteredCars = (carsInSelectedCity | 
+                                         filter: searchText | 
+                                         filter: {fuelType: fuelFilter} | 
+                                         filter: {category: categoryFilter} |
+                                         orderBy: sortOption)" 
+         style="margin-bottom: 20px;">
+      <a ui-sref="carDetails({id: car.id})" style="text-decoration: none; display: block;">
+          <card-component car="car"></card-component>
+      </a>
+    </div>
+  </div>
+
+  
+
+</div>
