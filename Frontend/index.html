@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+  <base href="/" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My AngularJS App</title>
+  
+  <!-- CSS Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <!-- JavaScript Libraries -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.28/angular-ui-router.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.4/async.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap-tpls.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> 
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+  <!-- Application Scripts -->
+  <script src="app.js"></script>
+  <script src="app/factories/util.factory.js"></script>
+  <script src="app/services/Auth.service.js"></script>
+  <script src="app/config/app.routes.js"></script>
+  <script src="app/services/indexedDB.service.js"></script>
+  <script src="app/services/Bidding.service.js"></script>
+  <script src="app/services/Chat.service.js"></script>
+  <script src="app/services/Dashboard.service.js"></script>
+  <script src="\app\services\Car.service.js"></script>
+  <script src="app/services/Booking.service.js"></script>
+  
+  <!-- Controllers -->
+  <script src="app/views/auth/auth.controller.js"></script>
+  <script src="app/views/user/user-dashboard/user-dashboard.controller.js"></script>
+  <script src="app/views/owner/owner-dashboard/owner-dashboard.controller.js"></script>
+  <script src="app/views/owner/owner-addCar/owner-addCar.controller.js"></script>
+  <script src="app/views/owner/owner-booking/owner-booking.controller.js"></script>
+  <script src="app/views/user/user-car/user-car.controller.js"></script>
+  <script src="app/views/owner/owner-Bidding/owner-bidding.controller.js"></script>
+  <script src="app/views/user/user-bookings/user-bookings.controller.js"></script>
+  <script src="app/views/owner/owner-Analysis/owner-analysis.controller.js"></script>
+  <script src="app/views/user/user-bidding/user-bidding.controller.js"></script>
+  <script src="app/views/user/user-chat/user-chat.controller.js"></script>
+  <script src="app/views/owner/owner-chat/owner-chat.controller.js"></script>
+  <script src="app/views/owner/owner-profile/owner-profile.controller.js"></script>
+  <script src="app/views/user/user-profile/user-profile.controller.js"></script>
+  <script src="app\views\super-admin\super-admin-analysis\super-admin-analysis.controller.js"></script>
+  
+  <!-- Directives and Components -->
+  <script src="app/directives/auth.directive.js"></script>
+  <script src="app\directives\password.directive.js"></script>
+  <script src="app/factories/toast.factory.js"></script>
+  <script src="app/factories/location.factory.js"></script>
+  <script src="app\factories\user.factory.js"></script>
+  <script src="\app\factories\AuthInterceptor.factory.js"></script>
+  <script src="app/components/user-navbar/user-navbar.js"></script>
+  <script src="app/components/owner-navbar/owner-navbar.js"></script>
+  <script src="app/components/card/card.component.js"></script>
+  <script src="app\components\modals\booking.component.js"></script>
+  <script src="app\components\modals\alert.component.js"></script>
+  <script src="app\components\modals\editCarForm.component.js"></script>
+  <script src="app\components\modals\invoice.component.js"></script>
+
+</head>
+<body>
+
+  <div ui-view></div>
+
+</body>
+</html>
