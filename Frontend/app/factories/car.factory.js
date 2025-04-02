@@ -1,458 +1,317 @@
 /**
- * CarFactory - A service for managing car-related operations
- * Uses prototype pattern for efficient method sharing
+ * CarFactory - Manages car data validation and creation
+ * Provides methods for validating car properties and creating car objects
  */
-myApp.factory('CarFactory', ['$http', '$q', 'AuthService', 'FileUploadService', function($http, $q, AuthService, FileUploadService) {
-  
-  /**
-   * Car constructor function
-   * @param {Object} carData - Car data object
-   */
-  function Car(carData) {
-    // Initialize with empty object if no data provided
-    carData = carData || {};
+myApp.factory('CarFactory', [
+  '$q', 
+  'CITIES', 
+  'FUEL_TYPES', 
+  'CATEGORIES',
+  'FEATURES', 
+  function($q, CITIES, FUEL_TYPES, CATEGORIES, FEATURES) {
+    // ==========================================
+    // Validation Rules
+    // ==========================================
     
-    // Basic car properties
-    this._id = carData._id || null;
-    this.carName = carData.carName || '';
-    this.category = carData.category || '';
-    this.fuelType = carData.fuelType || '';
-    
-    // Pricing and rental details
-    this.basePrice = carData.basePrice || 0;
-    this.pricePerKm = carData.pricePerKm || 0;
-    this.outStationCharges = carData.outStationCharges || 0;
-    this.travelled = carData.travelled || 0;
-    this.finePercentage = carData.finePercentage || 50; // Default 50%
-    
-    // Features and specifications
-    this.features = carData.features || [];
-    
-    // Status and availability
-    this.isDisabled = carData.isDisabled || false;
-    this.city = carData.city || '';
-    
-    // Car images
-    this.imageUrl = carData.imageUrl || [];
-  }
-
-
-
-  Car
-  
-  /**
-   * Validate car basic information
-   * @returns {Object} Validation result
-   */
-  Car.prototype.validateBasicInfo = function() {
-    const validations = [];
-    
-    if (!this.make) {
-      validations.push({ field: 'make', message: 'Make is required' });
-    }
-    
-    if (!this.model) {
-      validations.push({ field: 'model', message: 'Model is required' });
-    }
-    
-    if (!this.year) {
-      validations.push({ field: 'year', message: 'Year is required' });
-    } else if (this.year < 1900 || this.year > new Date().getFullYear() + 1) {
-      validations.push({ field: 'year', message: 'Year must be between 1900 and ' + (new Date().getFullYear() + 1) });
-    }
-    
-    if (!this.category) {
-      validations.push({ field: 'category', message: 'Category is required' });
-    }
-    
-    if (!this.licensePlate) {
-      validations.push({ field: 'licensePlate', message: 'License plate is required' });
-    }
-    
-    return {
-      isValid: validations.length === 0,
-      validations: validations
+    /**
+     * Constants used for validation
+     */
+    const VALIDATION_RULES = {
+      MIN_PRICE: 1,                                             // Minimum price in dollars
+      MAX_PRICE: 50000,                                         // Maximum price in dollars
+      LICENSE_PLATE_REGEX: /^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/,  // Format: MH02AB1234
+      ALLOWED_FUEL_TYPES: FUEL_TYPES,                           // List of valid fuel types
+      ALLOWED_CATEGORIES: CATEGORIES,                           // List of valid car categories
+      ALLOWED_CITIES: CITIES,                                   // List of available service cities
+      MIN_FINE_PERCENTAGE: 0,                                   // Minimum fine percentage
+      MAX_FINE_PERCENTAGE: 100                                  // Maximum fine percentage
     };
-  };
-  
-  /**
-   * Validate car pricing information
-   * @returns {Object} Validation result
-   */
-  Car.prototype.validatePricing = function() {
-    const validations = [];
     
-    if (this.price === undefined || this.price === null || this.price === '') {
-      validations.push({ field: 'price', message: 'Price is required' });
-    } else if (isNaN(this.price) || this.price <= 0) {
-      validations.push({ field: 'price', message: 'Price must be a positive number' });
-    }
+    // ==========================================
+    // Car Constructor
+    // ==========================================
     
-    if (this.pricePerKm === undefined || this.pricePerKm === null || this.pricePerKm === '') {
-      validations.push({ field: 'pricePerKm', message: 'Price per km is required' });
-    } else if (isNaN(this.pricePerKm) || this.pricePerKm < 0) {
-      validations.push({ field: 'pricePerKm', message: 'Price per km must be a non-negative number' });
-    }
-    
-    if (this.securityDeposit === undefined || this.securityDeposit === null || this.securityDeposit === '') {
-      validations.push({ field: 'securityDeposit', message: 'Security deposit is required' });
-    } else if (isNaN(this.securityDeposit) || this.securityDeposit < 0) {
-      validations.push({ field: 'securityDeposit', message: 'Security deposit must be a non-negative number' });
-    }
-    
-    return {
-      isValid: validations.length === 0,
-      validations: validations
-    };
-  };
-  
-  /**
-   * Validate car location information
-   * @returns {Object} Validation result
-   */
-  Car.prototype.validateLocation = function() {
-    const validations = [];
-    
-    if (!this.location.address) {
-      validations.push({ field: 'location.address', message: 'Address is required' });
-    }
-    
-    if (!this.location.city) {
-      validations.push({ field: 'location.city', message: 'City is required' });
-    }
-    
-    if (!this.location.state) {
-      validations.push({ field: 'location.state', message: 'State is required' });
-    }
-    
-    if (!this.location.zipCode) {
-      validations.push({ field: 'location.zipCode', message: 'ZIP code is required' });
-    }
-    
-    return {
-      isValid: validations.length === 0,
-      validations: validations
-    };
-  };
-  
-  /**
-   * Validate the entire car object
-   * @returns {Object} Validation result
-   */
-  Car.prototype.validate = function() {
-    const basicInfoValidation = this.validateBasicInfo();
-    const pricingValidation = this.validatePricing();
-    const locationValidation = this.validateLocation();
-    
-    const validations = [
-      ...basicInfoValidation.validations,
-      ...pricingValidation.validations,
-      ...locationValidation.validations
-    ];
-    
-    // Additional checks for required images
-    if (!this.images || this.images.length === 0) {
-      validations.push({ field: 'images', message: 'At least one car image is required' });
-    }
-    
-    return {
-      isValid: validations.length === 0,
-      validations: validations
-    };
-  };
-  
-  /**
-   * Get the car's full name (make + model + year)
-   * @returns {string} Car's full name
-   */
-  Car.prototype.getFullName = function() {
-    return `${this.year} ${this.make} ${this.model}`;
-  };
-  
-  /**
-   * Check if car documents are about to expire
-   * @param {number} daysThreshold - Number of days to check for expiry
-   * @returns {Object} Expiry status for registration and insurance
-   */
-  Car.prototype.checkDocumentsExpiry = function(daysThreshold = 30) {
-    const today = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(today.getDate() + daysThreshold);
-    
-    return {
-      registrationExpiring: this.registrationExpiry && this.registrationExpiry <= thirtyDaysFromNow,
-      insuranceExpiring: this.insuranceExpiry && this.insuranceExpiry <= thirtyDaysFromNow,
-      registrationExpired: this.registrationExpiry && this.registrationExpiry < today,
-      insuranceExpired: this.insuranceExpiry && this.insuranceExpiry < today
-    };
-  };
-  
-  /**
-   * Calculate the car age in years
-   * @returns {number} Car age in years
-   */
-  Car.prototype.getAge = function() {
-    return new Date().getFullYear() - this.year;
-  };
-  
-  /**
-   * Format price display with currency symbol
-   * @param {string} currencySymbol - Currency symbol to use
-   * @returns {string} Formatted price
-   */
-  Car.prototype.getFormattedPrice = function(currencySymbol = '₹') {
-    return `${currencySymbol}${this.price.toLocaleString('en-IN')}`;
-  };
-  
-  // Factory methods
-  
-  /**
-   * Create a new car instance
-   * @param {Object} carData - Car data
-   * @returns {Car} Car instance
-   */
-  const createCar = function(carData) {
-    return new Car(carData);
-  };
-  
-
-  
-
-  
-  /**
-   * Add a new car
-   * @param {Car} car - Car instance
-   * @param {Array<File>} imageFiles - Array of image files to upload
-   * @returns {Promise<Car>} Promise resolving to created car instance
-   */
-  
-  const addCar = function(carData) {
-    const car=createCar(carData);
-
-    const deferred = $q.defer();
-    
-    // Validate car data before submission
-    const validation = car.validate();
-    if (!validation.isValid) {
-      deferred.reject({
-        success: false,
-        message: 'Invalid car data',
-        validations: validation.validations
-      });
-      return deferred.promise;
-    }
-    
-    // Upload images first if they exist
-    let uploadPromise;
-    if (imageFiles && imageFiles.length > 0) {
-      uploadPromise = FileUploadService.uploadFiles(imageFiles, 'cars');
-    } else {
-      uploadPromise = $q.resolve([]);
-    }
-    
-    uploadPromise.then(function(uploadedFiles) {
-      // Add uploaded images to car object
-      if (uploadedFiles.length > 0) {
-        car.images = uploadedFiles.map(file => file.url);
-        car.primaryImage = car.images[0];
-      }
+    /**
+     * Car constructor - Creates a new car with validation
+     * @param {Object} data - Car data to initialize with
+     */
+    function Car(data) {
+      // Use empty object if no data provided
+      data = data || {};
       
-      // Submit car data to the API
-      return $http.post('/api/cars', car);
-    })
-    .then(function(response) {
-      deferred.resolve(new Car(response.data.car));
-    })
-    .catch(function(error) {
-      deferred.reject(error.data ? error.data : 'Failed to add car');
-    });
-    
-    return deferred.promise;
-  };
-  
-  /**
-   * Update an existing car
-   * @param {Car} car - Car instance with updated data
-   * @param {Array<File>} newImageFiles - New image files to upload
-   * @returns {Promise<Car>} Promise resolving to updated car instance
-   */
-  const updateCar = function(car, newImageFiles) {
-    const deferred = $q.defer();
-    
-    if (!car.id) {
-      deferred.reject('Car ID is required for update');
-      return deferred.promise;
+      // Initialize and validate each property
+      this._id = data._id || null;
+      this.carName = this.validateCarName(data.carName);
+      this.numberPlate = this.validateNumberPlate(data.numberPlate);
+      this.category = this.validateCategory(data.category);
+      this.fuelType = this.validateFuelType(data.fuelType);
+      this.basePrice = this.validatePrice(data.basePrice, 'Base price');
+      this.pricePerKm = this.validatePrice(data.pricePerKm, 'Price per km');
+      this.outStationCharges = this.validatePrice(data.outStationCharges, 'Outstation charges');
+      this.travelled = this.validateTravelled(data.travelled);
+      this.city = this.validateCity(data.city);
+      this.features = this.validateFeatures(data.features);
+      this.finePercentage = this.validateFinePercentage(data.finePercentage);
+      this.imageUrl = data.imageUrl || null;
+      this.image = data.image || null;
+      this.isDisabled = data.isDisabled || false;
     }
     
-    // Validate car data before submission
-    const validation = car.validate();
-    if (!validation.isValid) {
-      deferred.reject({
-        success: false,
-        message: 'Invalid car data',
-        validations: validation.validations
-      });
-      return deferred.promise;
-    }
+    // ==========================================
+    // Validation Methods
+    // ==========================================
     
-    // Upload new images if they exist
-    let uploadPromise;
-    if (newImageFiles && newImageFiles.length > 0) {
-      uploadPromise = FileUploadService.uploadFiles(newImageFiles, 'cars');
-    } else {
-      uploadPromise = $q.resolve([]);
-    }
-    
-    uploadPromise.then(function(uploadedFiles) {
-      // Add newly uploaded images to existing images
-      if (uploadedFiles.length > 0) {
-        const newImageUrls = uploadedFiles.map(file => file.url);
-        car.images = [...car.images, ...newImageUrls];
+    Car.prototype = {
+      /**
+       * Validates car name
+       * @param {string} name - Car name to validate
+       * @returns {string} Validated car name
+       * @throws {Error} If validation fails
+       */
+      validateCarName: function(name) {
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+          throw new Error('Car name is required');
+        }
+        if (name.trim().length < 3) {
+          throw new Error('Car name must be at least 3 characters long');
+        }
+        return name.trim();
+      },
+      
+      /**
+       * Validates license plate number format
+       * @param {string} plate - License plate to validate
+       * @returns {string} Validated license plate
+       * @throws {Error} If validation fails
+       */
+      validateNumberPlate: function(plate) {
+        if (!plate || typeof plate !== 'string' || plate.trim().length === 0) {
+          throw new Error('License plate number is required');
+        }
         
-        // If there was no primary image, set the first new one
-        if (!car.primaryImage && newImageUrls.length > 0) {
-          car.primaryImage = newImageUrls[0];
+        const cleanPlate = plate.trim().toUpperCase();
+        if (!VALIDATION_RULES.LICENSE_PLATE_REGEX.test(cleanPlate)) {
+          throw new Error('Invalid license plate format. Example: MH02AB1234');
+        }
+        
+        return cleanPlate;
+      },
+      
+      /**
+       * Validates car category
+       * @param {string} category - Category to validate
+       * @returns {string} Validated category
+       * @throws {Error} If validation fails
+       */
+      validateCategory: function(category) {
+        if (!category || !VALIDATION_RULES.ALLOWED_CATEGORIES.includes(category)) {
+          throw new Error(`Invalid category. Must be one of: ${VALIDATION_RULES.ALLOWED_CATEGORIES.join(', ')}`);
+        }
+        return category;
+      },
+      
+      /**
+       * Validates fuel type
+       * @param {string} fuelType - Fuel type to validate
+       * @returns {string} Validated fuel type
+       * @throws {Error} If validation fails
+       */
+      validateFuelType: function(fuelType) {
+        if (!fuelType || !VALIDATION_RULES.ALLOWED_FUEL_TYPES.includes(fuelType)) {
+          throw new Error(`Invalid fuel type. Must be one of: ${VALIDATION_RULES.ALLOWED_FUEL_TYPES.join(', ')}`);
+        }
+        return fuelType;
+      },
+      
+      /**
+       * Validates price fields
+       * @param {number|string} price - Price to validate
+       * @param {string} fieldName - Name of price field for error messages
+       * @returns {number} Validated price
+       * @throws {Error} If validation fails
+       */
+      validatePrice: function(price, fieldName) {
+        const numPrice = parseFloat(price);
+        if (isNaN(numPrice) || numPrice < VALIDATION_RULES.MIN_PRICE) {
+          throw new Error(`${fieldName} must be at least ${VALIDATION_RULES.MIN_PRICE}`);
+        }
+        
+        if (numPrice > VALIDATION_RULES.MAX_PRICE) {
+          throw new Error(`${fieldName} cannot exceed ${VALIDATION_RULES.MAX_PRICE}`);
+        }
+        
+        return numPrice;
+      },
+      
+      /**
+       * Validates fine percentage
+       * @param {number|string} percentage - Fine percentage to validate
+       * @returns {number} Validated fine percentage (defaults to 50%)
+       * @throws {Error} If validation fails
+       */
+      validateFinePercentage: function(percentage) {
+        const numPercentage = parseFloat(percentage);
+        if (isNaN(numPercentage)) {
+          // Default value if not provided
+          return 50;
+        }
+        
+        if (numPercentage < VALIDATION_RULES.MIN_FINE_PERCENTAGE) {
+          throw new Error(`Fine percentage must be at least ${VALIDATION_RULES.MIN_FINE_PERCENTAGE}`);
+        }
+        
+        if (numPercentage > VALIDATION_RULES.MAX_FINE_PERCENTAGE) {
+          throw new Error(`Fine percentage cannot exceed ${VALIDATION_RULES.MAX_FINE_PERCENTAGE}`);
+        }
+        
+        return numPercentage;
+      },
+      
+      /**
+       * Validates kilometers travelled
+       * @param {number|string} travelled - Kilometers travelled to validate
+       * @returns {number} Validated traveled kilometers
+       * @throws {Error} If validation fails
+       */
+      validateTravelled: function(travelled) {
+        const numTravelled = parseInt(travelled, 10);
+        
+        if (isNaN(numTravelled) || numTravelled < 0) {
+          throw new Error('Kilometers travelled must be 0 or greater');
+        }
+        return numTravelled;
+      },
+      
+      /**
+       * Validates city
+       * @param {string} city - City to validate
+       * @returns {string} Validated city
+       * @throws {Error} If validation fails
+       */
+      validateCity: function(city) {
+        if (!city || !VALIDATION_RULES.ALLOWED_CITIES.includes(city)) {
+          throw new Error(`Invalid city. Must be one of: ${VALIDATION_RULES.ALLOWED_CITIES.join(', ')}`);
+        }
+        return city;
+      },
+      
+      /**
+       * Validates car features list
+       * @param {Array} features - List of features to validate
+       * @returns {Array} Validated features list
+       * @throws {Error} If validation fails
+       */
+      validateFeatures: function(features) {
+        if (!features || !Array.isArray(features) || features.length === 0) {
+          throw new Error('At least one feature is required');
+        }
+        
+        if (features.length > 3) {
+          throw new Error('Maximum 3 features allowed');
+        }
+        
+        return features;
+      },
+      
+      /**
+       * Validates all car properties together
+       * Collects errors instead of throwing
+       * @returns {Object} Validation result with errors list
+       * @returns {boolean} result.isValid - Whether all validations passed
+       * @returns {Array} result.errors - List of error messages
+       * @returns {string} result.message - Combined error message or success message
+       */
+      validate: function() {
+        const errors = [];
+        
+        // Try validating each field, collecting errors
+        try { this.validateCarName(this.carName); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateNumberPlate(this.numberPlate); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateCategory(this.category); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateFuelType(this.fuelType); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validatePrice(this.basePrice, 'Base price'); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validatePrice(this.pricePerKm, 'Price per km'); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validatePrice(this.outStationCharges, 'Outstation charges'); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateFinePercentage(this.finePercentage); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateTravelled(this.travelled); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateCity(this.city); } 
+        catch (e) { errors.push(e.message); }
+        
+        try { this.validateFeatures(this.features); } 
+        catch (e) { errors.push(e.message); }
+        
+        // Check if image exists
+        if (!this.image && !this.imageUrl) {
+          errors.push('Car image is required');
+        }
+        
+        return {
+          isValid: errors.length === 0,
+          errors: errors,
+          message: errors.length > 0 ? errors.join('. ') : 'Car data is valid'
+        };
+      }
+    };
+    
+    // ==========================================
+    // Factory Public API
+    // ==========================================
+    
+    return {
+      /**
+       * Creates a new car instance with validation
+       * @param {Object} data - Car data to create from
+       * @returns {Promise<Car>} Promise resolving to car instance
+       */
+      createCar: function(data) {
+        const deferred = $q.defer();
+        try {
+          const car = new Car(data);
+          deferred.resolve(car);
+        } catch (error) {
+          deferred.reject(error);
+        }
+        return deferred.promise;
+      },
+      
+      /**
+       * Validates car data without creating a car instance
+       * @param {Object} data - Car data to validate
+       * @returns {Object} Validation result object
+       * @returns {boolean} result.isValid - Whether validation passed
+       * @returns {Array} result.errors - List of validation errors
+       * @returns {string} result.message - Combined error message
+       */
+      validateCarData: function(data) {
+        try {
+          const car = new Car(data);
+          return car.validate();
+        } catch (error) {
+          return {
+            isValid: false,
+            errors: [error.message],
+            message: error.message
+          };
         }
       }
-      
-      // Submit updated car data to the API
-      return $http.put('/api/cars/' + car.id, car);
-    })
-    .then(function(response) {
-      deferred.resolve(new Car(response.data.car));
-    })
-    .catch(function(error) {
-      deferred.reject(error.data ? error.data : 'Failed to update car');
-    });
-    
-    return deferred.promise;
-  };
-  
-  /**
-   * Delete a car by ID
-   * @param {string} carId - Car ID to delete
-   * @returns {Promise<Object>} Promise resolving to deletion result
-   */
-  const deleteCar = function(carId) {
-    return $http.delete('/api/cars/' + carId)
-      .then(function(response) {
-        return response.data;
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to delete car');
-      });
-  };
-  
-  /**
-   * Update car availability status
-   * @param {string} carId - Car ID
-   * @param {boolean} isAvailable - Availability status
-   * @returns {Promise<Car>} Promise resolving to updated car instance
-   */
-  const updateAvailability = function(carId, isAvailable) {
-    return $http.patch('/api/cars/' + carId + '/availability', { isAvailable: isAvailable })
-      .then(function(response) {
-        return new Car(response.data.car);
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to update car availability');
-      });
-  };
-  
-  /**
-   * Get cars belonging to a specific owner
-   * @param {string} ownerId - Owner ID
-   * @returns {Promise<Array<Car>>} Promise resolving to array of car instances
-   */
-  const getOwnerCars = function(ownerId) {
-    return $http.get('/api/cars/owner/' + ownerId)
-      .then(function(response) {
-        const cars = response.data.cars.map(function(carData) {
-          return new Car(carData);
-        });
-        return cars;
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to fetch owner cars');
-      });
-  };
-  
-  /**
-   * Update car primary image
-   * @param {string} carId - Car ID
-   * @param {string} imageUrl - URL of image to set as primary
-   * @returns {Promise<Car>} Promise resolving to updated car instance
-   */
-  const updatePrimaryImage = function(carId, imageUrl) {
-    return $http.patch('/api/cars/' + carId + '/primary-image', { primaryImage: imageUrl })
-      .then(function(response) {
-        return new Car(response.data.car);
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to update primary image');
-      });
-  };
-  
-  /**
-   * Delete car image
-   * @param {string} carId - Car ID
-   * @param {string} imageUrl - URL of image to delete
-   * @returns {Promise<Car>} Promise resolving to updated car instance
-   */
-  const deleteImage = function(carId, imageUrl) {
-    return $http.delete('/api/cars/' + carId + '/images', { data: { imageUrl: imageUrl } })
-      .then(function(response) {
-        return new Car(response.data.car);
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to delete image');
-      });
-  };
-  
-  /**
-   * Search for cars based on criteria
-   * @param {Object} searchParams - Search parameters
-   * @returns {Promise<Array<Car>>} Promise resolving to array of matching cars
-   */
-  const searchCars = function(searchParams) {
-    return $http.get('/api/cars/search', { params: searchParams })
-      .then(function(response) {
-        const cars = response.data.cars.map(function(carData) {
-          return new Car(carData);
-        });
-        return cars;
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to search cars');
-      });
-  };
-  
-  /**
-   * Get car categories
-   * @returns {Promise<Array<string>>} Promise resolving to array of categories
-   */
-  const getCarCategories = function() {
-    return $http.get('/api/cars/categories')
-      .then(function(response) {
-        return response.data.categories;
-      })
-      .catch(function(error) {
-        return $q.reject(error.data ? error.data : 'Failed to fetch car categories');
-      });
-  };
-  
-  // Return factory API
-  return {
-    createCar: createCar,
-    addCar: addCar,
-    updateCar: updateCar,
-    deleteCar: deleteCar,
-    updateAvailability: updateAvailability,
-    getOwnerCars: getOwnerCars,
-    updatePrimaryImage: updatePrimaryImage,
-    deleteImage: deleteImage,
-    searchCars: searchCars,
-    getCarCategories: getCarCategories,
-    
-  };
-}]);
+    };
+  }
+]);

@@ -85,6 +85,11 @@ const carSchema = new mongoose.Schema({
     type: Number,
     min:0
   },
+  numberPlate:{
+    type: String,
+    required: true,
+    trim: true
+  },
   owner: subModelSchema 
 
 }, { timestamps: true });

@@ -21,38 +21,62 @@
     <div class="panel panel-default">
       <div class="panel-body">
         <div class="row">
-          <!-- Sort Options -->
-          <div class="col-sm-5">
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-sort"></i> Sort By</span>
-              <select class="form-control" ng-model="selectedSort">
-                <option value="car.name">Car Name (A-Z)</option>
-                <option value="-car.basePrice">Base Price (High to Low)</option>
-                <option value="car.basePrice">Base Price (Low to High)</option>
-              </select>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="search"><i class="fa fa-search"></i> Search Car:</label>
+              <div class="input-group">
+                <span class="input-group-addon"
+                  ><i class="fa fa-search"></i
+                ></span>
+                <input
+                id="search"
+                  type="text"
+                  class="form-control"
+                  ng-model="search"
+                  placeholder="Search Car..."
+                  ng-change="getUserBiddings()"
+                ng-model-options="{ debounce: 300 }"
+                />
+              </div>
             </div>
           </div>
-          
-          <!-- Filter Options -->
-          <div class="col-sm-5">
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-filter"></i> Filter By</span>
-              <select class="form-control" ng-model="statusFilter">
+  
+          <!-- Status Filter -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="statusFilter"><i class="fa fa-tag"></i> Status:</label>
+              <select
+                class="form-control"
+                ng-model="selectedFilter"
+                ng-change="getUserBiddings()"
+                id="statusFilter"
+              >
                 <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
+                <option ng-repeat="(key, value) in filterBid" value="{{ key }}">
+                  {{ value }}
+                </option>
               </select>
             </div>
           </div>
-          
-          <!-- Search Box -->
-          <div class="col-sm-2">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Search..." ng-model="searchQuery">
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
-              </span>
+  
+  
+          <!-- Sort Bar -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="sortOption"><i class="fa fa-sort"></i> Sort By:</label>
+              <select
+                class="form-control"
+                ng-model="sortOption"
+                ng-change="getUserBiddings()"
+                id="sortOption"
+              >
+                <option
+                  ng-repeat="option in sortOptions"
+                  value="{{option.value}}"
+                >
+                  {{option.label}}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -74,12 +98,12 @@
              'panel-success': bid.status === 'accepted',
              'panel-danger': bid.status === 'rejected'
            }"
-           ng-repeat="bid in filteredBids = (biddings | filter: statusFilter | filter: searchQuery | orderBy: selectedSort)">
+           ng-repeat="bid in filteredBids = (biddings)">
         <uib-accordion-heading>
           <div class="row">
             <div class="col-xs-7">
               <i class="fa fa-car"></i> 
-              <strong>{{ bid.car.name }}</strong> - {{ bid.car.category }}
+              <strong>{{ bid.car.carName }}</strong> - {{ bid.car.category }}
               <span class="label" 
                     ng-class="{
                       'label-warning': bid.status === 'pending',
@@ -88,12 +112,19 @@
                     }">
                 {{ bid.status }}
               </span>
+              <span 
+                    class="label"
+                    ng-class="{'label-info': bid.tripType === 'inCity', 'label-primary': bid.tripType === 'outStation'}"
+                    style="margin-left: 2px;"
+                  >
+                    <i ng-class="{'fa fa-building': bid.tripType === 'inCity', 'fa fa-road': bid.tripType === 'outStation'}"></i>
+                    {{bid.tripType === 'outStation' ? 'Outstation' : 'In-City'}}
+                  </span>
             </div>
             <div class="col-xs-5 text-right">
-              <span><i class="fa fa-money"></i> {{ bid.car.basePrice | currency:"₹" }}</span>
-              <span class="text-muted" style="margin-left: 15px;">
-                <i class="fa fa-calendar"></i> {{ bid.createdAt | date:'MMM d, y' }}
-              </span>
+              <span class="label label-primary" style="margin-left: 2px;">{{bid.bidAmount | currency:"₹"}}</span>
+                  <span class="text-muted" style="margin-left: 2px;"><small>{{bid.startDate | date:'MMM d, y'}}</small></span>
+               
             </div>
           </div>
         </uib-accordion-heading>
@@ -116,7 +147,9 @@
                     <ul class="list-unstyled">
                       <li><strong>Category:</strong> {{ bid.car.category }}</li>
                       <li><strong>Base Price:</strong> {{ bid.car.basePrice | currency:"₹" }}</li>
+                      <li><strong>Bid Amount:</strong> {{ bid.bidAmount | currency:"₹" }}</li>
                       <li><strong>Price per Km:</strong> {{ bid.car.pricePerKm | currency:"₹" }}</li>
+                      <li><strong>OutStation Price:</strong> {{ bid.car.outStationCharges | currency:"₹" }}</li>
                     </ul>
                   </div>
                 </div>
@@ -161,7 +194,7 @@
                 <div class="alert alert-info">
                   <p class="text-center">
                     <i class="fa fa-info-circle"></i> 
-                    User joined on {{ bid.user.joinDate | date:'mediumDate' }}
+                    User joined on {{ bid.user.createdAt | date:'mediumDate' }}
                   </p>
                 </div>
               </div>
@@ -240,5 +273,18 @@
     </uib-accordion>
   </div>
   
+
+  <div class="text-center">
+    <ul
+      uib-pagination
+      total-items="totalItems"
+      ng-model="currentPage"
+      ng-change="getUserBiddings(currentPage)"
+      items-per-page="itemsPerPage"
+      max-size="maxSize"
+      class="pagination-sm"
+      boundary-link-numbers="true"
+    ></ul>
+  </div>
   
 </div>

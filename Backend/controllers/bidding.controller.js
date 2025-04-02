@@ -1,3 +1,9 @@
+/**
+ * @description Controller for managing bidding operations and bid workflow
+ * @module controllers/bidding
+ */
+
+// Import required models and dependencies
 const Bid = require("../models/bidding.model");
 const Car = require("../models/car.model");
 const Booking = require("../models/booking.model");
@@ -7,77 +13,107 @@ const mailService = require("../utils/mail");
 const { sendBidToQueue } = require("../utils/sqs");
 
 /**
- * @description Add a bid for a car
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @returns {object} - Returns the added bid
+ * @description Create a new bid for a car
+ * @function addBid
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing bid details
+ * @param {string} req.body.carId - ID of the car to bid on
+ * @param {number} req.body.bidAmount - Bid amount offered by the user
+ * @param {string} req.body.startDate - Requested start date for the booking
+ * @param {string} req.body.endDate - Requested end date for the booking
+ * @param {string} req.body.tripType - Type of trip (local or outStation)
+ * @param {Object} req.user - Authenticated user object from JWT middleware
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with status and bid data
  */
 let addBid = async (req, res) => {
   try {
+    // Validate request body using express-validator
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
    
-    // deconstruct details from request body
-    let { carId, bidAmount, startDate, endDate } = req.body;
+    // Extract details from request body
+    let { carId, bidAmount, startDate, endDate, tripType } = req.body;
 
+    // Create query object to find active car
     let findObject = {
       _id: carId,
       isDisabled: false,
     };
 
-    // find car by id
+    // Find car by ID
     let carDetails = await Car.findOne(findObject);
     if (!carDetails) return res.status(404).json({ message: "Car not found" });
 
-    // remove owner details from car object
+    // Extract owner details from car object
     let ownerDetails = carDetails.owner;
     delete carDetails.owner;
-
-    // create bidding object
+    
+    // Create bidding object with all necessary information
     let biddingObject = {
       bidAmount,
       startDate,
       endDate,
       status: "pending",
+      tripType,
       user: req.user,
       car: carDetails,
       owner: ownerDetails,
     };
 
-    let sqs_response=await sendBidToQueue(biddingObject);
+    // Send bid to SQS queue for processing
+    let sqs_response = await sendBidToQueue(biddingObject);
 
-    // send response
-    res.status(201).json({ success: true, data: sqs_response });
+    // Send success response
+    res.status(201).json({ 
+      success: true, 
+      data: sqs_response 
+    });
   } catch (error) {
-    // send error response
-    res.status(500).json({ success: false, error: error.message });
+    // Send error response
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 };
 
 /**
- * @description Accept a bid
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @returns {object} - Returns the added booking with accepted and rejected bid IDs
+ * @description Accept a bid and create a booking
+ * @function acceptBid
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.id - Bid ID to accept
+ * @param {Object} req.user - Authenticated user object from JWT middleware
+ * @param {string} req.user._id - User ID of car owner
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with booking and affected bids information
  */
 let acceptBid = async (req, res) => {
   try {
-    // fetch bid id and owner id
+    // Extract bid ID and owner ID
     let id = req.params.id;
     let owner_id = req.user._id;
 
-    // create find object
-    let findObject = { _id: id, "owner._id": owner_id, status: "pending" };
+    // Create query object to find pending bid owned by the current user
+    let findObject = { 
+      _id: id, 
+      "owner._id": owner_id, 
+      status: "pending" 
+    };
   
-    // add booking and delete overlapping bids
+    // Process bid acceptance, create booking and handle overlapping bids
     let result = await addBookingAndDeleteOverlappingBids(findObject);
 
-    if (!result) return res.status(404).json({ message: "Bid not found" });
+    if (!result) return res.status(404).json({ 
+      message: "Bid not found" 
+    });
 
     let booking = result.booking;
 
+    // Send email notification to user about bid acceptance
     mailService.sendBidAcceptedEmail({
       userEmail: booking.user.email,
       userName: booking.user.name,
@@ -91,9 +127,7 @@ let acceptBid = async (req, res) => {
       image: booking.car.imageUrl,
     });
 
- 
-
-    // send response with all the information
+    // Send success response with all relevant information
     res.status(200).json({
       success: true,
       data: {
@@ -104,37 +138,52 @@ let acceptBid = async (req, res) => {
       },
     });
   } catch (error) {
-    // send error response
-    res.status(500).json({ message: error.message });
+    // Send error response
+    res.status(500).json({ 
+      message: error.message 
+    });
   }
 };
 
 /**
  * @description Reject a bid
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @returns {object} - Returns the updated bid
+ * @function rejectBid
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.id - Bid ID to reject
+ * @param {Object} req.user - Authenticated user object from JWT middleware
+ * @param {string} req.user._id - User ID of car owner
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with status and updated bid
  */
 let rejectBid = async (req, res) => {
   try {
-    // fetch bid id and owner id
+    // Extract bid ID and owner ID
     const id = req.params.id;
     const owner_id = req.user._id;
 
-    // creating find object
-    const findObject = { _id: id, "owner._id": owner_id, status: "pending" };
+    // Create query object to find pending bid owned by the current user
+    const findObject = { 
+      _id: id, 
+      "owner._id": owner_id, 
+      status: "pending" 
+    };
 
-    // update bid status to rejected
+    // Update bid status to rejected
     const updatedBid = await Bid.findOneAndUpdate(
       findObject,
       { status: "rejected" },
       { new: true }
     );
-    if (!updatedBid) return res.status(404).json({ message: "Bid not found" });
+    
+    // Check if bid exists and belongs to the owner
+    if (!updatedBid) return res.status(404).json({ 
+      message: "Bid not found" 
+    });
 
     let booking = updatedBid;
 
-
+    // Send email notification to user about bid rejection
     mailService.sendBidRejectedEmail({
       userEmail: booking.user.email,
       userName: booking.user.name,
@@ -148,14 +197,14 @@ let rejectBid = async (req, res) => {
       image: booking.car.imageUrl,
     });
 
-    // send response
+    // Send success response
     res.status(200).json({
       success: true,
       message: "Bid rejected successfully",
       data: updatedBid,
     });
   } catch (error) {
-    // send error response
+    // Send error response
     res.status(500).json({
       success: false,
       message: "Failed to reject bid",
@@ -165,137 +214,179 @@ let rejectBid = async (req, res) => {
 };
 
 /**
- * @description Get all bids
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @returns {object} - Returns all bids after applying filters, sorting and pagination
+ * @description Get all bids with filtering, sorting and pagination
+ * @function getAllBids
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters for filtering and pagination
+ * @param {string} [req.query.carName] - Filter by car name (partial match)
+ * @param {string} [req.query.status] - Filter by bid status
+ * @param {string} [req.query.sortBy=createdAt] - Field to sort by
+ * @param {number} [req.query.sortOrder=-1] - Sort order (1 for ascending, -1 for descending)
+ * @param {number} [req.query.page=1] - Page number for pagination
+ * @param {number} [req.query.limit=10] - Results per page
+ * @param {Object} req.user - Authenticated user object from JWT middleware
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with filtered bids and metadata
  */
 let getAllBids = async (req, res) => {
   try {
-    // deconstruct query parameters
+    // Extract query parameters with defaults
     let {
+      carName,
       status,
-      category,
-      bidAmount,
       sortBy = "createdAt",
       sortOrder = -1,
       page = 1,
       limit = 10,
     } = req.query;
 
-    // create query object
-    let query = {};
+    // Create query object for filtering
+    let query = {}; 
+    
+    // Add filters if provided
+    if(carName && carName.trim()) {
+      query["car.carName"] = { $regex: carName, $options: 'i' };
+    }
     if (status) query.status = status;
-    if (category) query["car.category"] = category;
-    if (bidAmount) query.bidAmount = { $lte: parseInt(bidAmount) };
 
+    // Apply role-based filtering
     let user = req.user;
-
     if (user.role === "owner") {
+      // Owners only see bids for their cars
       query["owner._id"] = user._id;
     } else if (user.role === "user") {
+      // Users only see their own bids
       query["user._id"] = user._id;
     }
 
-    // convert values from string to int
+    // Convert pagination and sorting values from string to int
     page = parseInt(page);
     limit = parseInt(limit);
     sortOrder = parseInt(sortOrder);
 
-    // create sort object
+    // Create sort object
     let sortObject = {};
     sortObject[sortBy] = sortOrder;
 
-    // aggregation pipeline for filtering, sorting, paginating
+    // Aggregation pipeline for filtering, sorting, paginating
     const pipeline = [
       { $match: query },
       { $sort: sortObject },
-      { $skip: (page - 1) * limit },
-      { $limit: limit },
+      { $facet: {
+        metadata: [ 
+          { $count: "total" }, 
+          { $addFields: { page: page, limit: limit } } 
+        ],
+        data: [ 
+          { $skip: (page - 1) * limit }, 
+          { $limit: limit } 
+        ]
+      }}
     ];
 
-    // get bids after applying filters, sorting and pagination
-    let bids = await Bid.aggregate(pipeline);
-
-    // send response
-    res.status(200).json({ success: true, data: bids });
+    // Execute aggregation
+    let bidsData = await Bid.aggregate(pipeline);
+    
+    // Extract metadata or provide defaults
+    const metadata = bidsData[0].metadata[0] || { 
+      total: 0, 
+      page: page, 
+      limit: limit 
+    };
+  
+    // Send success response
+    res.status(200).json({ 
+      success: true, 
+      bids: bidsData[0].data, 
+      metadata: metadata 
+    });
   } catch (error) {
-    // send error response
-    res.status(500).json({ success: false, message: error.message });
+    // Send error response
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 
 /**
- * @description Add booking and delete overlapping bids
- * @param {object} findObject - Find object for bid
- * @returns {object} - Returns the added booking and rejected bid IDs
+ * @description Helper function to accept a bid, create a booking, and reject overlapping bids
+ * @function addBookingAndDeleteOverlappingBids
+ * @param {Object} findObject - Query object to find the bid to accept
+ * @returns {Object} Object containing booking, accepted bid ID, and rejected bid IDs
+ * @throws {Error} If bid is not found or any other error occurs
  */
 let addBookingAndDeleteOverlappingBids = async (findObject) => {
+  // Start a MongoDB session for transaction
   const session = await mongoose.startSession();
+  
   try {
-    // start transaction
+    // Start transaction to ensure atomicity
     session.startTransaction();
 
-    // find bid
-    let bid = await Bid.findOne(findObject);
+    // Update bid status to accepted
+    let bid = await Bid.findOneAndUpdate(
+      findObject,
+      { status: "accepted" },
+      { new: true, session }
+    );
+    
+    // Validate bid exists
     if (!bid) throw new Error("Bid not found");
 
-    // check if bid is already rejected
-    if (bid.status === "rejected") throw new Error("Bid already rejected");
-
-    // Store the accepted bid ID
     const acceptedBidId = bid._id;
 
-    // First find overlapping bids to get their IDs before deleting
+    // Find overlapping bids to reject
     const overlappingBids = await Bid.find(
       {
         "car._id": bid.car._id,
         startDate: { $lte: bid.endDate },
         endDate: { $gte: bid.startDate },
         status: "pending",
-        _id: { $ne: acceptedBidId }, // Exclude the accepted bid
+        _id: { $ne: acceptedBidId },
       },
       { _id: 1 }
     ).session(session);
 
-    // Extract just the IDs
-    const rejectedBidIds = overlappingBids.map((b) => b._id);
+    // Extract just the IDs of overlapping bids
+    const rejectedBidIds = overlappingBids.map(b => b._id);
 
-    // Create booking from the bid
+    // Update overlapping bids to rejected status
+    if (rejectedBidIds.length > 0) {
+      await Bid.updateMany(
+        { _id: { $in: rejectedBidIds } },
+        { status: "rejected" },
+        { session }
+      );
+    }
+
+    // Create a new booking based on the accepted bid
     let bookingData = bid.toObject();
     let booking = new Booking(bookingData);
     let addedBooking = await booking.save({ session });
 
-    // Delete overlapping bids
-    await Bid.updateMany(
-      {
-        "car._id": addedBooking.car._id,
-        startDate: { $lte: addedBooking.endDate },
-        endDate: { $gte: addedBooking.startDate },
-        status: "pending",
-      },
-      {
-        $set: {
-          status: "rejected"
-        }
-      },
-      { session }
-    );
-
+    // Commit the transaction
     await session.commitTransaction();
     session.endSession();
 
-    // Return both the booking and rejected bid IDs
+    // Return the results
     return {
       booking: addedBooking,
       acceptedBidId: acceptedBidId,
       rejectedBidIds: rejectedBidIds,
     };
   } catch (error) {
+    // Abort transaction if any error occurs
     await session.abortTransaction();
     session.endSession();
     throw new Error(error.message);
   }
 };
 
-module.exports = { addBid, acceptBid, rejectBid, getAllBids };
+// Export controller functions
+module.exports = { 
+  addBid, 
+  acceptBid, 
+  rejectBid, 
+  getAllBids 
+};

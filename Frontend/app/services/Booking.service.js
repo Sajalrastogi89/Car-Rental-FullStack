@@ -1,54 +1,100 @@
-myApp.service("BookingService", ["$http", "$q", function ($http, $q) {
-
-  this.getAllBookings = function () {
-    let deferred = $q.defer();
-    $http.get("http://localhost:8000/api/booking/getAllBookings").then((response) => {
-      deferred.resolve(response.data);
-    }).catch((error) => {
-      deferred.reject(error);
-    });
-    return deferred.promise;
-  }
-
-  this.getBookingsCount = function () {
-    let deferred = $q.defer();
-    $http.get("http://localhost:8000/api/analysis/booking-count").then((response) => {
-      deferred.resolve(response.data);
-    }).catch((error) => {
-      deferred.reject(error);
-    });
-    return deferred.promise;
-  }
-
-  this.getBookingsByCarId = function (carId) {
-    let deferred = $q.defer();
-    $http.get(`http://localhost:8000/api/booking/getBookingsByCarId/${carId}`).then((response) => {
-      console.log("response", response);
-      deferred.resolve(response.data);
-    }).catch((error) => {
-      deferred.reject(error);
-    });
-    return deferred.promise;
-  }
-
-
-  this.updateStartOdometer = function (bookingId, odometerValue, odometerType, carId ) {
-    let deferred = $q.defer();
-    let updateObject = {
-      bookingId,
-      odometerValue,
-      odometerType,
-      carId
+/**
+ * @description Booking Service - Handles car booking operations and management
+ * Provides methods for booking retrieval, updates, and analytics
+ */
+myApp.service("BookingService", [
+  "$http", 
+  "$q", 
+  function($http, $q) {
+    // ==========================================
+    // Booking Retrieval
+    // ==========================================
+    
+    /**
+     * @description Fetch all bookings with optional filtering parameters
+     * @param {Object} params - Query parameters for filtering bookings
+     * @returns {Promise<Object>} Promise resolving to {bookings: Array, metadata: Object}
+     */
+    this.getAllBookings = function(params) {
+      let deferred = $q.defer();
+      let config = { params };
+      
+      $http.get("http://localhost:8000/api/booking/getAllBookings", config)
+        .then((response) => {
+          deferred.resolve(response.data);
+        })
+        .catch((error) => {
+          deferred.reject(error);
+        });
+      return deferred.promise;
     };
-    console.log("updateObject", updateObject);
-    $http.patch(`http://localhost:8000/api/booking/updateBooking/${bookingId}`,  updateObject ).then((response) => {
-      console.log("response", response);
-      deferred.resolve(response.data);
-    }).catch((error) => {
-      deferred.reject(error);
-    });
-    return deferred.promise;
-  }
 
-}
+    /**
+     * @description Get total count of bookings for analytics
+     * @returns {Promise<Object>} Promise resolving to booking count statistics
+     */
+    this.getBookingsCount = function() {
+      let deferred = $q.defer();
+      
+      $http.get("http://localhost:8000/api/analysis/booking-count")
+        .then((response) => {
+          deferred.resolve(response.data);
+        })
+        .catch((error) => {
+          deferred.reject(error);
+        });
+      return deferred.promise;
+    };
+
+    /**
+     * @description Fetch all bookings for a specific car
+     * @param {string} carId - ID of the car to get bookings for
+     * @returns {Promise<Array>} Promise resolving to array of bookings
+     */
+    this.getBookingsByCarId = function(carId) {
+      let deferred = $q.defer();
+      
+      $http.get(`http://localhost:8000/api/booking/getBookingsByCarId/${carId}`)
+        .then((response) => {
+          deferred.resolve(response.data);
+        })
+        .catch((error) => {
+          deferred.reject(error);
+        });
+      return deferred.promise;
+    };
+
+    // ==========================================
+    // Booking Updates
+    // ==========================================
+    
+    /**
+     * @description Update odometer reading for a booking
+     * @param {string} bookingId - ID of the booking to update
+     * @param {number} odometerValue - New odometer reading value
+     * @param {string} odometerType - Type of reading ('start' or 'end')
+     * @param {string} carId - ID of the car associated with the booking
+     * @returns {Promise<Object>} Promise resolving to updated booking details
+     */
+    this.updateStartOdometer = function(bookingId, odometerValue, odometerType, carId) {
+      let deferred = $q.defer();
+      
+      let updateObject = {
+        bookingId,
+        odometerValue,
+        odometerType,
+        carId
+      };
+      console.log("updateObject", updateObject);
+      $http.patch(`http://localhost:8000/api/booking/updateBooking/${bookingId}`, updateObject)
+        .then((response) => {
+          console.log("response booking service", response);
+          deferred.resolve(response.data);
+        })
+        .catch((error) => {
+          deferred.reject(error);
+        });
+      return deferred.promise;
+    };
+  }
 ]);

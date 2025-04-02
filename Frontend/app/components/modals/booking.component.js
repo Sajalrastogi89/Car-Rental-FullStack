@@ -29,12 +29,12 @@ myApp.component("bookingDetailsModal", {
         <div class="panel panel-default" ng-repeat="bid in $ctrl.resolve.dataObject | orderBy:'-bookingDate'" style="margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
             <h4 class="panel-title">
-              <i class="fa fa-calendar"></i> {{bid.car.startDate | date:'MMM dd, yyyy'}} 
-              <span class="text-muted">to</span> {{bid.car.endDate | date:'MMM dd, yyyy'}}
+              <i class="fa fa-calendar"></i> {{bid.startDate | date:'MMM dd, yyyy'}} 
+              <span class="text-muted">to</span> {{bid.endDate | date:'MMM dd, yyyy'}}
             </h4>
-            <span ng-class="{'label label-success': bid.paymentStatus, 'label label-warning': !bid.paymentStatus}">
+            <span ng-class="{'label label-success': bid.paymentStatus==='paid', 'label label-warning': bid.paymentStatus==='pending'}">
               <i class="fa" ng-class="{'fa-check-circle': bid.paymentStatus, 'fa-clock-o': !bid.paymentStatus}"></i>
-              {{bid.paymentStatus ? 'Paid' : 'Payment Pending'}}
+              {{bid.paymentStatus==='paid' ? 'Paid' : 'Payment Pending'}}
             </span>
           </div>
           <div class="panel-body">

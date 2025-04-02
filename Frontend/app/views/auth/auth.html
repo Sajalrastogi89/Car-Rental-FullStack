@@ -1,10 +1,10 @@
 <div class="container">
-  <div class="panel panel-default shadow-lg mx-auto" style="max-width: 400px; width: 100%; padding: 20px; margin: 50px auto">
+  <div class="panel panel-default shadow-lg" style="max-width: 400px; margin: 50px auto; padding: 20px;">
     <div class="panel-heading text-center">
       <h2 class="text-primary">EZYCAR</h2>
     </div>
 
-    <uib-tabset active="activeTab" class="w-100" style="width: 100%;">
+    <uib-tabset active="activeTab" class="w-100">
       
       <uib-tab index="0" heading="Login">
         <div class="panel-body">
@@ -30,7 +30,7 @@
           <form name="signupForm" ng-submit="register()" novalidate>
             <div class="form-group">
               <label>User Type:</label>
-              <div class="btn-group btn-group-toggle d-flex">
+              <div class="btn-group">
                 <label class="btn btn-default">
                   <input type="radio" ng-model="user.role" value="user" required> User
                 </label>

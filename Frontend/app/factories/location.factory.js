@@ -1,54 +1,63 @@
-myApp
-  .factory("LocationFactory",['$q','$http',function($q,$http){
-  const metroCities=[
-    "Delhi", "Mumbai", "Bengaluru", "Chennai", "Kolkata", "Hyderabad", 
-    "Pune", "Ahmedabad", "Jaipur", "Chandigarh", "Lucknow", "Kochi", 
-    "Bhopal", "Indore", "Surat", "Agra", "Patna", "Vadodara", "Goa", 
-    "Shimla", "Rishikesh", "Manali", "Mussoorie", "Coimbatore", "Tiruchirappalli",
-    "Jodhpur", "Udaipur", "Mysore", "Varanasi"
-  ];
+/**
+ * Location Factory - Gets user's city location and checks if service is available there
+ */
+myApp.factory("LocationFactory", ['$q', '$http', 'CITIES', function($q, $http, CITIES) {
+  // List of cities where our service is available
+  const metroCities = CITIES;
 
-  return {
-    getCityUsingGeolocation: function() {
-      let deferred = $q.defer();
+  /**
+   * Gets user's current city using browser location
+   * @returns {Promise} Promise that resolves with city name or error message
+   */
+  function getCityUsingGeolocation() {
+    const deferred = $q.defer();
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          let lat = position.coords.latitude;
-          let lon = position.coords.longitude;
-          let url = 'https://nominatim.openstreetmap.org/reverse?lat=' 
-                    + lat + '&lon=' + lon + '&format=json';
-
-          $http.get(url).then(function(response) {
-            console.log("current city in location factory", response);
-            let data = response.data;
-            if (data && data.address) {
-              let city = data.address.city || data.address.town || data.address.village;
-              let state = data.address.state;
-              
-              if ((city && metroCities.indexOf(city) !== -1) || state === "Delhi") {
-                if(city) city=city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-                deferred.resolve(city || "Delhi");
-                console.log("city fetched", city);
-              } else {
-                deferred.resolve("Our service is not available in your location.");
-              }
-            } else {
-              deferred.reject("Unable to fetch city data.");
-            }
-          }, function(error) {
-            deferred.reject("Error fetching city.");
-            console.error(error);
-          });
-        }, function(error) {
-          deferred.reject("Error getting geolocation: " + error.message);
-          console.error(error);
-        });
-      } else {
-        deferred.reject("Geolocation not supported by this browser.");
-      }
-      
-      // Return the promise
+    // Check if browser can get location
+    if (!navigator.geolocation) {
+      deferred.reject("Geolocation not supported by your browser");
       return deferred.promise;
     }
-  }}])
+
+    // Get user's location coordinates
+    navigator.geolocation.getCurrentPosition(
+      // When location is found
+      position => {
+        // Create URL to get city name from coordinates
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`;
+        
+        // Get city name from coordinates
+        $http.get(url)
+          .then(response => {
+            const address = response.data?.address;
+            if (!address) {
+              deferred.reject("Unable to fetch city data");
+              return;
+            }
+
+            // Try to get city name, fallback to town or village
+            let city = address.city || address.town || address.village;
+            const state = address.state;
+
+            // Check if we provide service in this city
+            if ((city && metroCities.includes(city)) || state === "Delhi") {
+              // Format city name (first letter capital)
+              city = city ? city.charAt(0).toUpperCase() + city.slice(1).toLowerCase() : "Delhi";
+              deferred.resolve(city);
+            } else {
+              deferred.resolve("Our service is not available in your location");
+            }
+          })
+          .catch(() => deferred.reject("Error fetching city data"));
+      },
+      // When location access fails
+      error => deferred.reject("Error getting location: " + error.message)
+    );
+
+    return deferred.promise;
+  }
+
+  // Make the function available to other parts of the app
+  return {
+    getCityUsingGeolocation
+  };
+}]);

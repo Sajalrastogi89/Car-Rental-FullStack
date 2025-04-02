@@ -1,12 +1,22 @@
 /**
- * UserFactory - A service that provides user validation for signup and login
- * Uses prototype pattern for efficient method sharing
+ * @description User Factory - Manages user data validation and preparation
+ * Provides comprehensive validation for user signup and login processes
+ * Uses prototype pattern for efficient method sharing across user instances
+ * @module UserFactory
  */
-myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, AuthService) {
+myApp.factory('UserFactory', ['$q', function($q) {
   
   /**
-   * User constructor function
-   * @param {Object} userData - User data object
+   * User constructor function - Creates a new user instance with validation methods
+   * @constructor
+   * @param {Object} userData - Initial user data
+   * @param {string} [userData.firstName] - User's first name
+   * @param {string} [userData.lastName] - User's last name
+   * @param {string} [userData.email] - User's email address
+   * @param {string} [userData.password] - User's password
+   * @param {string} [userData.confirmPassword] - Password confirmation
+   * @param {string} [userData.phone] - User's phone number
+   * @param {string} [userData.role='user'] - User's role (user/owner)
    */
   function User(userData) {
     // Initialize with empty object if no data provided
@@ -22,9 +32,15 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
     this.role = userData.role || 'user'; // default role
   }
   
+  // ==========================================
+  // Validation Methods
+  // ==========================================
+  
   /**
-   * Validate email format
+   * Validate email format using regex
    * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether the email is valid
+   * @returns {string} result.message - Validation message
    */
   User.prototype.validateEmail = function() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,8 +66,12 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
   };
   
   /**
-   * Validate password strength
+   * Validate password strength and complexity
+   * Checks for length, uppercase, lowercase, numbers, and special characters
    * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether the password is valid
+   * @returns {string} result.message - Validation message
+   * @returns {boolean} [result.suggestion] - Whether there's a suggestion for improvement
    */
   User.prototype.validatePassword = function() {
     if (!this.password) {
@@ -68,7 +88,7 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
       };
     }
     
-    // Check for password complexity (at least one uppercase, one lowercase, one number)
+    // Check for password complexity
     const hasUppercase = /[A-Z]/.test(this.password);
     const hasLowercase = /[a-z]/.test(this.password);
     const hasNumber = /[0-9]/.test(this.password);
@@ -81,7 +101,7 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
       };
     }
     
-    // Bonus: Suggest adding a special character if not present
+    // Suggest adding a special character if not present
     if (!hasSpecial) {
       return {
         isValid: true,
@@ -97,8 +117,10 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
   };
   
   /**
-   * Validate password confirmation match
+   * Validate password confirmation matches password
    * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether passwords match
+   * @returns {string} result.message - Validation message
    */
   User.prototype.validatePasswordMatch = function() {
     if (!this.confirmPassword) {
@@ -122,11 +144,13 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
   };
   
   /**
-   * Validate phone number format for signup
+   * Validate phone number format
+   * Accepts formats: +91 9876543210, 9876543210, 987-654-3210
    * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether the phone number is valid
+   * @returns {string} result.message - Validation message
    */
   User.prototype.validatePhone = function() {
-    // Allow formats like: +91 9876543210, 9876543210, 987-654-3210
     const phoneRegex = /^(\+\d{1,3}\s?)?\d{10}$|^\d{3}[-.]?\d{3}[-.]?\d{4}$/;
     
     if (!this.phone) {
@@ -150,8 +174,11 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
   };
   
   /**
-   * Validate user's name for signup
+   * Validate user's first and last name
+   * Checks for minimum length and valid characters
    * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether the name is valid
+   * @returns {string} result.message - Validation message
    */
   User.prototype.validateName = function() {
     if (!this.firstName || !this.lastName) {
@@ -183,9 +210,16 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
     };
   };
   
+  // ==========================================
+  // Validation Aggregators
+  // ==========================================
+  
   /**
-   * Validate user input for login
-   * @returns {Object} Validation results with overall isValid flag
+   * Validate all required fields for login
+   * @returns {Object} Validation results
+   * @returns {boolean} results.isValid - Whether all validations passed
+   * @returns {Object} results.validations - Individual validation results
+   * @returns {string} results.message - Overall validation message
    */
   User.prototype.validateLogin = function() {
     const validations = {
@@ -196,18 +230,21 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
       }
     };
     
-    // Check if all validations passed
     const isValid = Object.values(validations).every(v => v.isValid);
     
     return {
       isValid: isValid,
-      validations: validations
+      validations: validations,
+      message: isValid ? 'Login data is valid' : 'Invalid login data'
     };
   };
   
   /**
-   * Validate user input for signup
-   * @returns {Object} Validation results with overall isValid flag
+   * Validate all required fields for signup
+   * @returns {Object} Validation results
+   * @returns {boolean} results.isValid - Whether all validations passed
+   * @returns {Object} results.validations - Individual validation results
+   * @returns {string} results.message - Overall validation message
    */
   User.prototype.validateSignup = function() {
     const validations = {
@@ -218,122 +255,113 @@ myApp.factory('UserFactory', ['$http', '$q', "AuthService", function($http, $q, 
       phone: this.validatePhone()
     };
     
-    // Check if all validations passed
     const isValid = Object.values(validations).every(v => v.isValid);
     
     return {
       isValid: isValid,
-      validations: validations
+      validations: validations,
+      message: isValid ? 'Signup data is valid' : 'Invalid signup data'
     };
   };
   
   /**
-   * Get full name
-   * @returns {string} User's full name
+   * Get user's full name
+   * @returns {string} Concatenated first and last name
    */
   User.prototype.getFullName = function() {
     return `${this.firstName} ${this.lastName}`;
   };
 
-  const createUser = function(data) {
-    const user = new User(data);
-    return user;
-  };
-  
-
+  // ==========================================
+  // Factory Helper Functions
+  // ==========================================
   
   /**
-   * Login user
-   * @param {Object} credentials - Email and password
-   * @returns {Promise<Object>} Promise resolving to login result
+   * Prepare user data for signup API call
+   * Validates all fields and formats data for API
+   * @param {Object} data - Raw user input data
+   * @returns {Object} Prepared user object and validation status
+   * @returns {boolean} result.isValid - Whether the data is valid
+   * @returns {Object} [result.user] - Prepared user object if valid
+   * @returns {string} [result.message] - Error message if invalid
+   * @returns {Object} [result.validation] - Validation details if invalid
    */
-  const login = function(credentials) {
-    let deferred = $q.defer();
-
-    const user = new User(credentials);
-    const validation = user.validateLogin();
-    
-    if (!validation.isValid) {
-      return deferred.reject({
-        success: false,
-        message: 'Invalid login data',
-      });
-    }
-
-    AuthService.loginUser(credentials).then((response) => {
-      localStorage.setItem('token', response.auth.token);
-      deferred.resolve({
-        success: true,
-        message: 'Login successful',
-        user: response.user
-      });
-    }
-    ).catch((error) => {
-      deferred.reject({
-        success: false,
-        message: 'Error logging in'
-      });
-    });
-    return deferred.promise;
-  };
-  
-  /**
-   * Register a new user
-   * @param {User} user - User instance with registration data
-   * @returns {Promise<Object>} Promise resolving to registration result
-   */
-  const signup = function(data) {
-
-    let deferred = $q.defer();
-
-    // Validate signup data
+  const prepareUserForSignup = function(data) {
     const user = new User(data);
     const validation = user.validateSignup();
-
+    
     if (!validation.isValid) {
-      return deferred.reject({
-        success: false,
-        message: 'Invalid signup data'
-      });
+      return {
+        isValid: false,
+        message: validation.message || 'Invalid signup data',
+        validation: validation
+      };
     }
-
+    
+    // Set verification status based on role
     if (user.role === "user") {
       user.verified = true;
     } else if (user.role === "owner") {
       user.verified = false;
     }
-
-    // setting name
-    user.name = user.getFullName();
-
-    // delete unnecessary fields
-    delete user.confirmPassword;
-    delete user.firstName;
-    delete user.lastName;
-
-    AuthService.registerUser(user)
-    .then((response) => {
-      deferred.resolve({
-        success: true,
-        message: 'User created'
-      });
-    })
-    .catch((error) => {
-      deferred.reject({
-        success: false,
-        message: 'Error adding user'
-      });
-    });
     
-   return deferred.promise;
+    // Set full name
+    user.name = user.getFullName();
+    
+    // Remove fields not needed for API
+    const preparedUser = { ...user };
+    delete preparedUser.confirmPassword;
+    delete preparedUser.firstName;
+    delete preparedUser.lastName;
+    
+    return {
+      isValid: true,
+      user: preparedUser
+    };
   };
   
-
+  /**
+   * Validate login credentials
+   * @param {Object} credentials - Login credentials
+   * @param {string} credentials.email - User's email
+   * @param {string} credentials.password - User's password
+   * @returns {Object} Validation result
+   * @returns {boolean} result.isValid - Whether credentials are valid
+   * @returns {string} result.message - Validation message
+   * @returns {Object} result.validation - Detailed validation results
+   */
+  const validateLoginCredentials = function(credentials) {
+    const user = new User(credentials);
+    const validation = user.validateLogin();
+    
+    return {
+      isValid: validation.isValid,
+      message: validation.message,
+      validation: validation
+    };
+  };
   
   // Return factory API
   return {
-    createUser: createUser,
-    loginUser: login,
-    addUser: signup,
+    /**
+     * Create a new user instance
+     * @param {Object} data - User data
+     * @returns {User} New user instance
+     */
+    createUser: function(data) {
+      return new User(data);
+    },
+    
+    /**
+     * Validate login credentials
+     * @type {Function}
+     */
+    validateLogin: validateLoginCredentials,
+    
+    /**
+     * Prepare user data for signup
+     * @type {Function}
+     */
+    prepareForSignup: prepareUserForSignup
   };
 }]);

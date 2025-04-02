@@ -23,7 +23,7 @@
                  class="img-circle img-thumbnail" 
                  style="max-width: 150px; margin-bottom: 20px;">
             
-            <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+            <h2>{{ user.name }}</h2>
           </div>
           
           <hr>
@@ -40,7 +40,7 @@
             <dd>{{user.role}}</dd>
             
             <dt><i class="fa fa-calendar"></i> Joined:</dt>
-            <dd>{{user.createdAt}}</dd>
+            <dd>{{user.createdAt | date:'mediumDate'}}</dd>
             
           </dl>
           

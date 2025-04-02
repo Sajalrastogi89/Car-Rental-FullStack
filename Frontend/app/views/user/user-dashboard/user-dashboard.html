@@ -1,6 +1,6 @@
 <user-navbar></user-navbar>
 
-<div class="container" ng-init="init()">
+<div class="container-fluid" ng-init="init()">
   <!-- Page Header with Filters -->
   <div class="panel panel-primary">
     <div class="panel-heading">
@@ -21,7 +21,7 @@
               type="text"
               class="form-control"
               ng-model="search"
-              placeholder="Search..."
+              placeholder="Search Car..."
               ng-change="getCarsData()"
               ng-model-options="{ debounce: 300 }"
             />
@@ -117,8 +117,8 @@
     <h2>
       <i class="fa fa-map-marker text-danger"></i>
       {{selectedCity || 'All Cities'}} Cars
-      <small ng-if="filteredCars.length"
-        >{{filteredCars.length}} available</small
+      <small ng-if="carsInSelectedCity.length"
+        >{{totalItems}} available</small
       >
     </h2>
   </div>
@@ -134,7 +134,7 @@
   </div>
 
   <!-- No Cars Found State -->
-  <div ng-show="!isLoading && filteredCars.length === 0">
+  <div ng-show="!isLoading && carsInSelectedCity.length === 0">
     <div uib-alert class="alert-info text-center">
       <h3><i class="fa fa-info-circle"></i> No cars available</h3>
       <p>
@@ -145,24 +145,30 @@
   </div>
 
   <!-- Car Cards Grid with Angular Pipes for Filtering -->
-  <div class="row" ng-hide="isLoading">
-    <div
-      class="col-md-4"
-      ng-repeat="car in filteredCars = (carsInSelectedCity)"
-      style="margin-bottom: 10px"
-    >
-      <a
-        ui-sref="carDetails({id: car._id})"
-        style="text-decoration: none; display: block"
+  <div ng-if="!isLoading">
+    <div class="row">
+      <div
+        class="col-md-4"
+        ng-repeat="car in carsInSelectedCity"
+        style="cursor: pointer; margin-bottom: 20px"
+        ng-click="goToCarDetails(car._id)"
       >
-        <card-component car="car"></card-component>
-      </a>
+          <card car="car"></card>
+      </div>
     </div>
   </div>
 
   <!-- Pagination with dummy values -->
   <div class="text-center">
-  <ul uib-pagination total-items="totalItems" ng-model="currentPage" max-size="maxSize" class="pagination-sm" boundary-link-numbers="true"></ul>
-    </div>
-   
+    <ul
+      uib-pagination
+      total-items="totalItems"
+      ng-model="currentPage"
+      ng-change="getCarsData(currentPage)"
+      items-per-page="itemsPerPage"
+      max-size="maxSize"
+      class="pagination-sm"
+      boundary-link-numbers="true"
+    ></ul>
+  </div>
 </div>

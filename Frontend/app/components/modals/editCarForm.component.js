@@ -32,7 +32,7 @@ myApp.component("editCarPriceModal", {
                      name="carName"
                      class="form-control" 
                      ng-model="$ctrl.carName" 
-                     ng-init="$ctrl.carName = $ctrl.resolve.car.name"
+                     ng-init="$ctrl.carName = $ctrl.resolve.car.carName"
                      required
                      maxlength="50"
                      placeholder="Enter car name">
@@ -43,7 +43,7 @@ myApp.component("editCarPriceModal", {
             
             <!-- Base Price -->
             <div class="form-group" ng-class="{'has-error': carEditForm.basePrice.$invalid && carEditForm.basePrice.$touched}">
-              <label>Base Price (per day)</label>
+              <label>Base Price Per Day</label>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-inr"></i></span>
                 <input type="number" 
@@ -59,43 +59,43 @@ myApp.component("editCarPriceModal", {
                 Base price is required
               </span>
               <span class="help-block" ng-show="carEditForm.basePrice.$error.min && carEditForm.basePrice.$touched">
-                Base price must be at least ₹1
+                Base price must be greater than 0
               </span>
             </div>
             
-            <!-- Price Per Km -->
+            <!-- Price Per KM -->
             <div class="form-group" ng-class="{'has-error': carEditForm.pricePerKm.$invalid && carEditForm.pricePerKm.$touched}">
-              <label>Price Per Kilometer</label>
+              <label>Price Per KM</label>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-inr"></i></span>
                 <input type="number" 
                        name="pricePerKm"
                        class="form-control" 
                        ng-model="$ctrl.pricePerKm" 
-                       ng-init="$ctrl.pricePerKm = $ctrl.resolve.car.pricePerKm || 0"
-                       min="0"
-                       step="0.5"
+                       ng-init="$ctrl.pricePerKm = $ctrl.resolve.car.pricePerKm"
+                       min="1"
                        required
-                       placeholder="Enter price per kilometer">
+                       placeholder="Enter price per km">
               </div>
               <span class="help-block" ng-show="carEditForm.pricePerKm.$error.required && carEditForm.pricePerKm.$touched">
-                Price per kilometer is required
+                Price per km is required
+              </span>
+              <span class="help-block" ng-show="carEditForm.pricePerKm.$error.min && carEditForm.pricePerKm.$touched">
+                Price per km must be greater than 0
               </span>
             </div>
             
-            
-            
             <!-- Outstation Price -->
             <div class="form-group" ng-class="{'has-error': carEditForm.outStationPrice.$invalid && carEditForm.outStationPrice.$touched}">
-              <label>Outstation Price (per day)</label>
+              <label>Outstation Charges</label>
               <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-inr"></i></span>
                 <input type="number" 
                        name="outStationPrice"
                        class="form-control" 
                        ng-model="$ctrl.outStationPrice" 
-                       ng-init="$ctrl.outStationPrice = $ctrl.resolve.car.outStationPrice || 0"
-                       min="0"
+                       ng-init="$ctrl.outStationPrice = $ctrl.resolve.car.outStationCharges"
+                       min="1"
                        required
                        placeholder="Enter outstation price per day">
               </div>
@@ -104,25 +104,29 @@ myApp.component("editCarPriceModal", {
               </span>
             </div>
             
-            
-           
-            
             <!-- Fine Per Extra Day -->
-            <div class="form-group" ng-class="{'has-error': carEditForm.finePerDay.$invalid && carEditForm.finePerDay.$touched}">
+            <div class="form-group" ng-class="{'has-error': carEditForm.finePercentage.$invalid && carEditForm.finePercentage.$touched}">
               <label>Fine % Per Late Return Day</label>
               <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-inr"></i></span>
                 <input type="number" 
-                       name="finePerDay"
+                       name="finePercentage"
                        class="form-control" 
-                       ng-model="$ctrl.finePerDay" 
-                       ng-init="$ctrl.finePerDay = $ctrl.resolve.car.finePerDay || 0"
+                       ng-model="$ctrl.finePercentage" 
+                       ng-init="$ctrl.finePercentage = $ctrl.resolve.car.finePercentage || 50"
                        min="0"
+                       max="100"
                        required
                        placeholder="Enter fine % per late return day">
+                <span class="input-group-addon">%</span>
               </div>
-              <span class="help-block" ng-show="carEditForm.finePerDay.$error.required && carEditForm.finePerDay.$touched">
-                Fine per late return day is required
+              <span class="help-block" ng-show="carEditForm.finePercentage.$error.required && carEditForm.finePercentage.$touched">
+                Fine percentage is required
+              </span>
+              <span class="help-block" ng-show="carEditForm.finePercentage.$error.min && carEditForm.finePercentage.$touched">
+                Fine percentage must be 0 or greater
+              </span>
+              <span class="help-block" ng-show="carEditForm.finePercentage.$error.max && carEditForm.finePercentage.$touched">
+                Fine percentage cannot exceed 100
               </span>
             </div>
           </form>
@@ -138,12 +142,12 @@ myApp.component("editCarPriceModal", {
               class="btn btn-success" 
               ng-click="$ctrl.close({$value: {
                 success: true, 
-                updatedCar: {
-                  name: $ctrl.carName,
+                updateCar: {
+                  carName: $ctrl.carName,
                   basePrice: $ctrl.basePrice,
                   pricePerKm: $ctrl.pricePerKm,
-                  outStationPrice: $ctrl.outStationPrice,
-                  finePerDay: $ctrl.finePerDay
+                  outStationCharges: $ctrl.outStationPrice,
+                  finePercentage: $ctrl.finePercentage
                 }
               }})" 
               ng-disabled="carEditForm.$invalid">

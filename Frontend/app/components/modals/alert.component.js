@@ -12,14 +12,14 @@ myApp.component("deleteAlertModal", {
       </button>
       <h3 class="modal-title text-white">
         <i class="fa fa-exclamation-triangle" style="margin-right: 10px;"></i>
-        Confirm Delete
+        Confirm Disable
       </h3>
     </div>
     
     <div class="modal-body text-center">
       <i class="fa fa-trash fa-4x text-danger" style="margin: 20px 0;"></i>
       
-      <h4>Are you sure you want to delete this car?</h4>
+      <h4>Are you sure you want to disable this car?</h4>
       <p class="text-danger"><strong>{{$ctrl.resolve.car.name}}</strong></p>
       
       <div class="alert alert-warning">
@@ -30,7 +30,7 @@ myApp.component("deleteAlertModal", {
     
     <div class="modal-footer">
       <button type="button" class="btn btn-danger" ng-click="$ctrl.close({$value: {confirmed: true}})">
-        <i class="fa fa-trash"></i> Delete Car
+        <i class="fa fa-trash"></i> Disable Car
       </button>
     </div>
   `,

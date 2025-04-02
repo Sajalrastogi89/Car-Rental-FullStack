@@ -3,7 +3,9 @@ myApp.controller("SuperAdminAnalysisController", [
   "$http",
   "$q",
   "$timeout",
-  function ($scope, $http, $q, $timeout) {
+  "$state",
+  "AuthService",
+  function ($scope, $http, $q, $timeout, $state, AuthService) {
     $scope.analytics = null;
     $scope.error = null;
     $scope.isLoading = false;
@@ -12,6 +14,12 @@ myApp.controller("SuperAdminAnalysisController", [
     $scope.dateRange = {
       startDate: new Date(new Date().setMonth(new Date().getMonth() - 3)), // Default to last 3 months
       endDate: new Date()
+    };
+    
+    // Logout function
+    $scope.logout = function() {
+      AuthService.logout();
+      $state.go('auth');
     };
     
     $scope.startDateOpened = false;
@@ -91,16 +99,13 @@ myApp.controller("SuperAdminAnalysisController", [
       $http.get(`http://localhost:8000/api/analysis/admin?startDate=${formattedStartDate}&endDate=${formattedEndDate}`)
         .then(response => {
           if (response.data.success) {
-            console.log("response", response);
             $scope.analytics = response.data.data;
             $scope.renderCharts();
           } else {
-            console.error("Error loading analytics:", response.data.message);
             $scope.error = "Failed to load analytics data.";
           }
         })
         .catch(error => {
-          console.error("API Error:", error);
           $scope.error = "An error occurred while fetching analytics data.";
         })
         .finally(() => {

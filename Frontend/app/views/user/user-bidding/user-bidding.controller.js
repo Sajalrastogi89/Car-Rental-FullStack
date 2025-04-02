@@ -1,85 +1,139 @@
+/**
+ * @description User Bidding Controller - Manages user's car rental bidding operations
+ * Handles bid listing, filtering, sorting, and duration calculations for user bids
+ */
 myApp.controller("userBiddingController", [
   "$scope",
-  "IndexedDBService",
-  "$q",
   "BiddingService",
-  function ($scope, IndexedDBService, $q, BiddingService) {
-    $scope.biddings = []; // declaration and initialization of biddings
+  "ToastService",
+  function ($scope, BiddingService, ToastService) {
+    // ==========================================
+    // State Management
+    // ==========================================
+    
+    /**
+     * @type {Array}
+     * @description List of all bids placed by the user
+     */
+    $scope.biddings = [];
 
-  
+    /**
+     * @type {string}
+     * @description Search query for filtering bids by car name
+     */
+    $scope.search = "";
 
-    // hardcoded options for dropdown
+    /**
+     * @type {string}
+     * @description Current sort option for bid listing
+     */
+    $scope.sortOption = "bidAmount"; // Default sort by bid amount
+
+    /**
+     * @type {string}
+     * @description Selected filter for bid status
+     */
+    $scope.selectedFilter = ""; // Default no status filter
+
+    // Pagination states
+    $scope.totalItems = 0;
+    $scope.currentPage = 1;
+    $scope.maxSize = 5;
+    $scope.itemsPerPage = 10;
+
+    /**
+     * @type {Array}
+     * @description Available sorting options for bid listing
+     */
+    $scope.sortOptions = [
+      { value: "bidAmount", label: "Price: Low to High" },
+      { value: "createdAt", label: "Created Date: New to Old" },
+      { value: "-createdAt", label: "Created Date: Old to New" },
+    ];
+
+    /**
+     * @type {Object}
+     * @description Bid status filter options
+     */
     $scope.filterBid = {
       pending: "pending",
       rejected: "rejected",
+      accepted: "accepted",
     };
-    $scope.selectedSort = "timestamp"; // Default sorting by timestamp
-    $scope.selectedFilter = "pending"; // Default filting by pending
 
-    // Initialize bidAmountCompare object for the "less than" filter
-    $scope.bidAmountCompare = { value: "" };
-
+    // ==========================================
+    // Initialization
+    // ==========================================
+    
     /**
-     * @description - executes when page will be loaded
-     * and fetch all the biddings
+     * @description Initialize the bidding dashboard
+     * Loads initial bid data and sets up the view
      */
-
-    $scope.init = function () {
+    $scope.init = function() {
       $scope.isLoading = true;
-      $scope
-        .getUserBiddings()
-        .then((allBiddings) => {
-          $scope.biddings = allBiddings;
+      BiddingService.getAllBids()
+        .then((response) => {
+          $scope.biddings = response.bids;
+          $scope.totalItems = response.metadata.total;
         })
         .catch((e) => {
-          console.log(e);
+          ToastService.error("Unable to fetch bids", 3000);
         })
         .finally(() => {
           $scope.isLoading = false;
         });
     };
 
+    // ==========================================
+    // Data Operations
+    // ==========================================
+    
     /**
-     * @description - fetch all the bids from db and filter bids that are not accepted
-     * and map blob to image url and then resolve the bids
-     * @returns {promise}
+     * @description Fetch filtered bids based on current search, filter, and sort options
+     * Updates the bid listing with paginated results
+     * @param {number} currentPage - The page number to fetch (defaults to 1)
      */
-    $scope.getUserBiddings = function () {
-      let deferred = $q.defer();
-      console.log("user bidding");
-      BiddingService.getAllBids()
-        .then((allBiddings) => {
-          console.log("all biddings", allBiddings);
-          deferred.resolve(allBiddings.data);
+    $scope.getUserBiddings = function(currentPage = 1) {
+      // Build query parameters
+      let param = {};
+      if ($scope.search) param.carName = $scope.search;
+      if ($scope.selectedFilter) param.status = $scope.selectedFilter;
+      if ($scope.sortOption) param.sortBy = $scope.sortOption;
+      if ($scope.itemsPerPage) param.limit = $scope.itemsPerPage;
+      param.page = currentPage;
+
+      // Fetch filtered bids
+      BiddingService.getAllBids(param)
+        .then((response) => {
+          $scope.biddings = response.bids;
+          $scope.totalItems = response.metadata.total;
+          $scope.currentPage = response.metadata.page;
         })
         .catch((e) => {
-          deferred.reject(e);
+          ToastService.error("Unable to fetch bids", 3000);
         });
-      return deferred.promise;
     };
 
-
-    // Custom filter function for bid amount
-    $scope.priceRangeFilter = function(bid) {
-      if (!$scope.bidAmountCompare.value) {
-        return true; // No filter applied, return all
-      }
-      
-      // Convert value to number and compare
-      let maxValue = parseFloat($scope.bidAmountCompare.value);
-      return bid.car.basePrice < maxValue;
-    };
-
+    // ==========================================
+    // Utility Functions
+    // ==========================================
+    
+    /**
+     * @description Calculate the duration between two dates in days
+     * @param {Date|string} startDate - Start date of the rental period
+     * @param {Date|string} endDate - End date of the rental period
+     * @returns {number} Number of days between the dates (inclusive)
+     */
     $scope.calculateDays = function(startDate, endDate) {
-      console.log("start date", startDate);
       if (!startDate || !endDate) return 0;
-      
+
       let start = new Date(startDate);
       let end = new Date(endDate);
-      let Diff = Math.abs(end - start); // this will give total milliseconds
-      const diffDays = Math.ceil(Diff / (1000 * 3600 * 24)) + 1;
-      return diffDays;
+      let diff = Math.abs(end - start); // Total milliseconds
+      return Math.ceil(diff / (1000 * 3600 * 24)) + 1; // Add 1 to include both start and end days
     };
-    
+
+    // Initialize controller
+    $scope.init();
   },
 ]);

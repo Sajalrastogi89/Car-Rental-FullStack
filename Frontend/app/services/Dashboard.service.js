@@ -1,12 +1,20 @@
+/**
+ * @description Dashboard Service - Handles common dashboard operations and field data retrieval
+ * Provides methods for fetching categories, fuel types, cities, and current location
+ */
 myApp.service("DashboardService", [
   "$q",
   "LocationFactory",
   "$http",
   function ($q,LocationFactory, $http) {
-
-
-
-
+    // ==========================================
+    // Field Data Operations
+    // ==========================================
+    
+    /**
+     * @description Fetch available car categories from the server
+     * @returns {Promise<Array>} Promise resolving to list of car categories
+     */
     this.getCategories = function () {
       let deferred = $q.defer();
 
@@ -21,14 +29,15 @@ myApp.service("DashboardService", [
       return deferred.promise;
     };
 
-
-
+    /**
+     * @description Fetch available fuel types from the server
+     * @returns {Promise<Array>} Promise resolving to list of fuel types
+     */
     this.getFuelTypes = function () {
       let deferred = $q.defer();
 
       $http
-        .get("http://localhost:8000/api/field/getFuelTypes",
-         )
+        .get("http://localhost:8000/api/field/getFuelTypes")
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -38,14 +47,19 @@ myApp.service("DashboardService", [
       return deferred.promise;
     };
 
-
-
+    // ==========================================
+    // Location Operations
+    // ==========================================
+    
+    /**
+     * @description Fetch list of available cities from the server
+     * @returns {Promise<Array>} Promise resolving to list of cities
+     */
     this.getCities = function () {
       let deferred = $q.defer();
 
       $http
-        .get("http://localhost:8000/api/field/getCities"
-          )
+        .get("http://localhost:8000/api/field/getCities")
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -55,7 +69,11 @@ myApp.service("DashboardService", [
       return deferred.promise;
     };
 
-
+    /**
+     * @description Get the current city based on geolocation
+     * Uses LocationFactory to determine user's current location
+     * @returns {Promise<Object>} Promise resolving to current city details
+     */
     this.getCurrentCity = function () {
       const deferred = $q.defer();
       LocationFactory.getCityUsingGeolocation()
@@ -67,78 +85,5 @@ myApp.service("DashboardService", [
         });
       return deferred.promise;
     };
-
-
-
-    this.getCars = function (params) {
-      let deferred = $q.defer();
-      console.log("current city in get cars", params);
-      // Configure request with params and credentials in a single config object
-      const config = {
-        params
-      };
-      console.log("params", params);
-      $http.get("http://localhost:8000/api/car/getCars", config)
-        .then((response) => {
-          console.log("Response from get cars", response);
-          let carsData=response.data;
-          carsData.cars.forEach((car) => {
-            const fuelData = this.getFuelPumpData(car.fuelType);
-            car.fuelPump = fuelData.icon;
-            car.fuelPumpStyle = fuelData.style;
-          });
-
-          deferred.resolve(response.data);
-        })
-        .catch((error) => {
-          console.error("Error fetching cars:", error);
-          deferred.reject(error);
-        });
-      
-      return deferred.promise;
-    };
-
-
-
-    /**
-     * @description - this will set fuel related data according to fuel value
-     * @param {String} fuelType
-     * @returns {Object}
-     */
-    this.getFuelPumpData = function (fuelType) {
-      return fuelType == "Electric"
-        ? {
-            icon: "assets/img/electric.png",
-            style: { width: "66%", opacity: 0.9 },
-          }
-        : { icon: "assets/img/fuel.png", style: {} };
-    };
-
-
-
-    this.addCarData = function (car) {
-      let deferred = $q.defer();
-      
-      // Configure $http to not set Content-Type when sending FormData
-      let config = {};
-      if (car instanceof FormData) {
-        config = {
-          transformRequest: angular.identity,
-          headers: {
-            'Content-Type': undefined
-          }
-        };
-      }
-      
-      $http.post("http://localhost:8000/api/car/addCar", car, config)
-        .then((response) => {
-          deferred.resolve(response.data);
-        })
-        .catch((error) => {
-          deferred.reject(error);
-        });
-      return deferred.promise;
-    }
-
   },
 ]);

@@ -1,18 +1,24 @@
-
 <div class="container-fluid p-4" ng-init="init()">
   <div class="panel panel-default shadow-sm mb-4">
     <div class="panel-heading bg-white p-3 border-bottom">
-      <div class="d-flex justify-content-between align-items-center">
-        <h2 class="mb-0"><i class="fas fa-tachometer-alt text-primary me-2"></i>Platform Analytics</h2>
-        <div class="btn-group">
-          <button type="button" class="btn btn-outline-secondary" ng-click="setLastMonth()">
-            <i class="far fa-calendar-alt me-1"></i> Last Month
-          </button>
-          <button type="button" class="btn btn-outline-secondary" ng-click="setLastThreeMonths()">
-            <i class="far fa-calendar-alt me-1"></i> Last 3 Months
-          </button>
-          <button type="button" class="btn btn-outline-secondary" ng-click="setThisYear()">
-            <i class="far fa-calendar-alt me-1"></i> This Year
+      <div class="row">
+        <div class="col-xs-8">
+          <h2 class="mb-0" style="display: inline-block; margin-right: 15px;"><i class="fas fa-tachometer-alt text-primary me-2"></i>Platform Analytics</h2>
+          <div class="btn-group" style="display: inline-block;">
+            <button type="button" class="btn btn-outline-secondary" ng-click="setLastMonth()">
+              <i class="far fa-calendar-alt me-1"></i> Last Month
+            </button>
+            <button type="button" class="btn btn-outline-secondary" ng-click="setLastThreeMonths()">
+              <i class="far fa-calendar-alt me-1"></i> Last 3 Months
+            </button>
+            <button type="button" class="btn btn-outline-secondary" ng-click="setThisYear()">
+              <i class="far fa-calendar-alt me-1"></i> This Year
+            </button>
+          </div>
+        </div>
+        <div class="col-xs-4 text-right">
+          <button type="button" class="btn btn-danger pull-right" style="margin-top: 8px;" ng-click="logout()">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
           </button>
         </div>
       </div>
@@ -104,9 +110,7 @@
                 <h3 class="mb-3 fw-bold text-center">₹{{ analytics.revenueSummary.totalRevenue | number:0 }}</h3>
                 <div class="d-flex align-items-center justify-content-between border-top pt-2">
                   <span class="small text-muted">Avg. Booking: ₹{{ analytics.revenueSummary.avgBookingValue | number:0 }}</span>
-                  <span class="badge bg-success">
-                    <i class="fas fa-arrow-up me-1"></i>12%
-                  </span>
+                  
                 </div>
               </div>
             </div>
@@ -125,9 +129,7 @@
                 <h3 class="mb-3 fw-bold text-center">{{ analytics.revenueSummary.totalBookings | number:0 }}</h3>
                 <div class="d-flex align-items-center justify-content-between border-top pt-2">
                   <span class="small text-muted">Distance: {{ analytics.revenueSummary.totalDistance | number:0 }} km</span>
-                  <span class="badge bg-success">
-                    <i class="fas fa-arrow-up me-1"></i>8%
-                  </span>
+                  
                 </div>
               </div>
             </div>
@@ -149,9 +151,7 @@
                     <span class="me-2">Owners: {{ analytics.platformMetrics.totalOwners | number:0 }}</span>
                     <span>Renters: {{ analytics.platformMetrics.totalRenters | number:0 }}</span>
                   </div>
-                  <span class="badge bg-success">
-                    <i class="fas fa-arrow-up me-1"></i>15%
-                  </span>
+                  
                 </div>
               </div>
             </div>
@@ -170,9 +170,7 @@
                 <h3 class="mb-3 fw-bold text-center">{{ analytics.platformMetrics.totalCars | number:0 }}</h3>
                 <div class="d-flex align-items-center justify-content-between border-top pt-2">
                   <span class="small text-muted">Avg. per Owner: {{ analytics.platformMetrics.avgCarsPerOwner }}</span>
-                  <span class="badge bg-success">
-                    <i class="fas fa-arrow-up me-1"></i>5%
-                  </span>
+                  
                 </div>
               </div>
             </div>

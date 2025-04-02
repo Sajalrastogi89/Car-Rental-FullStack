@@ -74,10 +74,17 @@ const userSubModelSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
+  phone: {
+    type: String,
+    trim: true,
+  },
   role: {
     type: String,
     required: true,
     trim: true,
+  },
+  createdAt: {
+    type: Date
   },
   
 });
@@ -94,12 +101,16 @@ const biddingSchema = new mongoose.Schema(
       required: true,
     },
     endDate: {
-      type: Date,
+      type: Date, 
       required: true,
     },
     status: {
       type: String,
       default: "pending",
+    },
+    tripType: {
+      type: String,
+      // required: true,
     },
     car: carSubModelSchema,
     user: userSubModelSchema,

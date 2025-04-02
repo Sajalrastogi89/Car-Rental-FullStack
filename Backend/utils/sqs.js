@@ -1,24 +1,37 @@
+// Import required dependencies
 const AWS = require('aws-sdk');
 const Bid = require('../models/bidding.model');
 
+// Initialize AWS SQS client with credentials from environment variables
 const sqs = new AWS.SQS({
   region: process.env.AWS_REGION,
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+/**
+ * @description Send a message to AWS SQS queue
+ * @param {Object} sqs - AWS SQS client instance
+ * @param {Object} params - Message parameters including QueueUrl and MessageBody
+ * @returns {Promise<Object>} - SQS response data
+ */
 async function awsSendMessage(sqs, params) {
   try {
-      // Use the SQS SDK to send a message with the specified parameters
-      const data = await sqs.sendMessage(params).promise();
-      // Return the response data
-      return data;
+    // Use the SQS SDK to send a message with the specified parameters
+    const data = await sqs.sendMessage(params).promise();
+    // Return the response data
+    return data;
   } catch (error) {
-      // If an error occurs, log the error message
-      console.error('Error:', error);
+    // If an error occurs, log the error message
+    console.error('Error:', error);
   }
 }
 
+/**
+ * @description Send bidding data to AWS SQS queue
+ * @param {Object} bidData - Bid information to be queued
+ * @returns {Promise<Object>} - SQS response
+ */
 const sendBidToQueue = async (bidData) => {
   const params = {
     QueueUrl: process.env.SQS_QUEUE_URL,
@@ -30,23 +43,32 @@ const sendBidToQueue = async (bidData) => {
   return response;
 };
 
+/**
+ * @description Receive messages from AWS SQS queue
+ * @param {Object} sqs - AWS SQS client instance
+ * @param {Object} params - Parameters including QueueUrl and MaxNumberOfMessages
+ * @returns {Promise<Object>} - Retrieved messages data
+ */
 async function awsReceiveMessage(sqs, params) {
   try {
-      // Use the SQS SDK to receive a message with the specified parameters
-      const data = await sqs.receiveMessage(params).promise();
-      // Return the response data
-      return data;
+    // Use the SQS SDK to receive a message with the specified parameters
+    const data = await sqs.receiveMessage(params).promise();
+    // Return the response data
+    return data;
   } catch (error) {
-      // If an error occurs, log the error message
-      console.error('Error:', error);
+    // If an error occurs, log the error message
+    console.error('Error:', error);
   }
 }
 
+/**
+ * @description Process message content and delete it from the queue
+ * @param {Object} message - Message object retrieved from SQS
+ */
 async function processAndDeleteMessage(message) {
   try {
     // Process the message (parse the bid data and save to DB)
     const bidData = JSON.parse(message.Body);
-    console.log('Processing bid data:', bidData);
 
     const deleteParams = {
       QueueUrl: process.env.SQS_QUEUE_URL,
@@ -61,7 +83,10 @@ async function processAndDeleteMessage(message) {
   }
 }
 
-
+/**
+ * @description Retrieve bid information from SQS queue, save to database, and remove from queue
+ * @returns {Promise<Array|Object>} - Empty array if no messages or SQS response
+ */
 const getBidFromQueue = async () => {
   const params = {
     QueueUrl: process.env.SQS_QUEUE_URL,
@@ -73,13 +98,16 @@ const getBidFromQueue = async () => {
     return [];
   }
 
-  let biddingObject=JSON.parse(response.Messages[0].Body);
+  // Parse the message body and create a new Bid document
+  let biddingObject = JSON.parse(response.Messages[0].Body);
   let bidding = new Bid(biddingObject);
   await bidding.save(); 
 
+  // Delete the processed message from the queue
   await processAndDeleteMessage(response.Messages[0]);
-
+  console.log("deleted");
   return response;
 };
 
+// Export functions for use in other modules
 module.exports = { sendBidToQueue, getBidFromQueue };

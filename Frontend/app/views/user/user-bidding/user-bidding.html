@@ -23,7 +23,7 @@
     <div class="panel-body">
       <div class="row">
         <!-- Search Bar -->
-        <div class="col-md-3">
+        <div class="col-md-4">
           <div class="form-group">
             <label for="search"><i class="fa fa-search"></i> Search Car:</label>
             <div class="input-group">
@@ -31,24 +31,27 @@
                 ><i class="fa fa-search"></i
               ></span>
               <input
+              id="search"
                 type="text"
-                id="search"
                 class="form-control"
-                placeholder="Search by car name"
-                ng-model="carNameSearch"
+                ng-model="search"
+                placeholder="Search Car..."
+                ng-change="getUserBiddings()"
+              ng-model-options="{ debounce: 300 }"
               />
             </div>
           </div>
         </div>
 
         <!-- Status Filter -->
-        <div class="col-md-2">
+        <div class="col-md-4">
           <div class="form-group">
             <label for="statusFilter"><i class="fa fa-tag"></i> Status:</label>
             <select
-              id="statusFilter"
               class="form-control"
               ng-model="selectedFilter"
+              ng-change="getUserBiddings()"
+              id="statusFilter"
             >
               <option value="">All Statuses</option>
               <option ng-repeat="(key, value) in filterBid" value="{{ key }}">
@@ -58,56 +61,23 @@
           </div>
         </div>
 
-        <!-- Category Filter -->
-        <div class="col-md-2">
-          <div class="form-group">
-            <label for="categoryFilter"
-              ><i class="fa fa-car"></i> Category:</label
-            >
-            <select
-              id="categoryFilter"
-              class="form-control"
-              ng-model="categoryFilter"
-            >
-              <option value="">All Categories</option>
-              <option value="Sedan">Sedan</option>
-              <option value="SUV">SUV</option>
-              <option value="Hatchback">Hatchback</option>
-              <option value="Luxury">Luxury</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Price Filter -->
-        <div class="col-md-2">
-          <div class="form-group">
-            <label for="priceFilter"
-              ><i class="fa fa-money"></i> Bid Amount:</label
-            >
-            <select
-              id="priceFilter"
-              class="form-control"
-              ng-model="bidAmountCompare.value"
-            >
-              <option value="">Any Amount</option>
-              <option value="1000">Under ₹1000</option>
-              <option value="2000">Under ₹2000</option>
-              <option value="3000">Under ₹3000</option>
-              <option value="5000">Under ₹5000</option>
-            </select>
-          </div>
-        </div>
 
         <!-- Sort Bar -->
-        <div class="col-md-3">
+        <div class="col-md-4">
           <div class="form-group">
-            <label for="sort"><i class="fa fa-sort"></i> Sort By:</label>
-            <select id="sort" class="form-control" ng-model="selectedSort">
-              <option value="timestamp">Most Recent</option>
-              <option value="-timestamp">Oldest First</option>
-              <option value="car.basePrice">Price: Low to High</option>
-              <option value="-car.basePrice">Price: High to Low</option>
-              <option value="car.pricePerKm">"Price per Km"</option>
+            <label for="sortOption"><i class="fa fa-sort"></i> Sort By:</label>
+            <select
+              class="form-control"
+              ng-model="sortOption"
+              ng-change="getUserBiddings()"
+              id="sortOption"
+            >
+              <option
+                ng-repeat="option in sortOptions"
+                value="{{option.value}}"
+              >
+                {{option.label}}
+              </option>
             </select>
           </div>
         </div>
@@ -132,29 +102,36 @@
           <div
             uib-accordion-group
             class="panel-default"
-            ng-repeat="bid in filteredBiddings = (biddings | filter:{status:selectedFilter} | filter:{car:{name:carNameSearch}} | filter:{car:{category:categoryFilter}} | filter:priceRangeFilter | orderBy:selectedSort)"
+            ng-repeat="bid in filteredBiddings = (biddings)"
           >
             <!-- Accordion Heading -->
             <uib-accordion-heading>
               <div class="row">
-                <div class="col-md-8">
-                  <i class="fa fa-car"></i> {{bid.car.name}}
+                <div class="col-md-6">
+                  <i class="fa fa-car"></i>
+                  <strong>{{ bid.car.carName }}</strong> - {{ bid.car.category }}
                   <span
                     class="label"
                     ng-class="{'label-success': bid.status === 'accepted', 
                                   'label-warning': bid.status === 'pending',
                                   'label-danger': bid.status === 'rejected'}"
+                    style="margin-left: 2px;"
                   >
                     {{bid.status}}
                   </span>
+                  <!-- Add trip type badge -->
+                  <span 
+                    class="label"
+                    ng-class="{'label-info': bid.tripType === 'inCity', 'label-primary': bid.tripType === 'outStation'}"
+                    style="margin-left: 2px;"
+                  >
+                    <i ng-class="{'fa fa-building': bid.tripType === 'inCity', 'fa fa-road': bid.tripType === 'outStation'}"></i>
+                    {{bid.tripType === 'outStation' ? 'Outstation' : 'In-City'}}
+                  </span>
                 </div>
-                <div class="col-md-4 text-right">
-                  <span class="label label-primary"
-                    >{{bid.bidAmount | currency:"₹"}}</span
-                  >
-                  <span class="text-muted"
-                    ><small>{{bid.timestamp | date:'MMM d, y'}}</small></span
-                  >
+                <div class="col-md-6 text-right">
+                  <span class="label label-primary" style="margin-left: 2px;">{{bid.bidAmount | currency:"₹"}}</span>
+                  <span class="text-muted" style="margin-left: 2px;"><small>{{bid.startDate | date:'MMM d, y'}}</small></span>
                 </div>
               </div>
             </uib-accordion-heading>
@@ -181,18 +158,22 @@
                   </div>
                   <ul class="list-group">
                     <li class="list-group-item">
+                      <i class="fa fa-tag"></i> Car Name
+                      <span class="badge">{{bid.car.carName}}</span>
+                    </li>
+                    <li class="list-group-item">
                       <i class="fa fa-tag"></i> Category
                       <span class="badge">{{bid.car.category}}</span>
                     </li>
                     <li class="list-group-item">
                       <span class="badge"
-                        >{{bid.car.basePrice | currency:"₹"}}</span
+                        >{{bid.car.basePrice | currency:"₹"}}/day</span
                       >
                       <i class="fa fa-money"></i> Base Price
                     </li>
                     <li class="list-group-item">
                       <span class="badge"
-                        >{{bid.car.pricePerKm | currency:"₹"}}</span
+                        >{{bid.car.pricePerKm | currency:"₹"}}/Km</span
                       >
                       <i class="fa fa-road"></i> Price per Km
                     </li>
@@ -205,27 +186,28 @@
                 <div class="panel panel-default">
                   <div class="panel-heading">
                     <h4 class="panel-title">
-                      <i class="fa fa-calendar"></i> Booking Period
+                      <i class="fa fa-calendar"></i> Booking Details
                     </h4>
                   </div>
                   <ul class="list-group">
+                    <!-- Add trip type to details -->
+                    <li class="list-group-item" ng-if="bid.tripType === 'outStation'">
+                      <span class="badge">
+                        {{bid.car.outStationCharges | currency:"₹"}}/day
+                      </span>
+                      <i class="fa fa-road"></i>
+                      OutStation Charges
+                    </li>
                     <li class="list-group-item">
-                      <span class="badge"
-                        >{{bid.startDate | date:'dd-MM-yyyy'}}</span
-                      >
+                      <span class="badge">{{bid.startDate | date:'dd-MM-yyyy'}}</span>
                       <i class="fa fa-calendar-plus-o"></i> Start Date
                     </li>
                     <li class="list-group-item">
-                      <span class="badge"
-                        >{{bid.endDate | date:'dd-MM-yyyy'}}</span
-                      >
+                      <span class="badge">{{bid.endDate | date:'dd-MM-yyyy'}}</span>
                       <i class="fa fa-calendar-check-o"></i> End Date
                     </li>
                     <li class="list-group-item">
-                      <span class="badge"
-                        >{{calculateDays(bid.startDate, bid.endDate)}}
-                        days</span
-                      >
+                      <span class="badge">{{calculateDays(bid.startDate, bid.endDate)}} days</span>
                       <i class="fa fa-clock-o"></i> Duration
                     </li>
                   </ul>
@@ -246,4 +228,19 @@
     <i class="fa fa-exclamation-triangle"></i> No biddings match your current
     search criteria.
   </div>
+
+
+  <div class="text-center">
+    <ul
+      uib-pagination
+      total-items="totalItems"
+      ng-model="currentPage"
+      ng-change="getUserBiddings(currentPage)"
+      items-per-page="itemsPerPage"
+      max-size="maxSize"
+      class="pagination-sm"
+      boundary-link-numbers="true"
+    ></ul>
+  </div>
+
 </div>

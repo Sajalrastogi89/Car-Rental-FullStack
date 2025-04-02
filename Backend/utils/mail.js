@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 
-// Create a transporter using SMTP settings
+/**
+ * @description Email transporter configuration using SMTP settings from environment variables
+ */
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
@@ -10,12 +12,12 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Send an email notification
- * @param {Object} options - Email options
+ * @description Sends an email notification using configured transporter
+ * @param {Object} options - Email sending options
  * @param {string} options.to - Recipient email address
- * @param {string} options.subject - Email subject
- * @param {string} options.html - Email HTML content
- * @returns {Promise} - Resolves with info about the email sending
+ * @param {string} options.subject - Email subject line
+ * @param {string} options.html - Email HTML content body
+ * @returns {Promise<Object>} - Resolves with information about the email sending result
  */
 const sendMail = async (options) => {
   try {
@@ -34,26 +36,30 @@ const sendMail = async (options) => {
 };
 
 /**
- * Send a bid acceptance email notification with enhanced details
- * @param {Object} data - Bid and user data
- * @param {string} data.userEmail - User email address
- * @param {string} data.userName - User's name
- * @param {string} data.carName - Name/model of the car
- * @param {number} data.bidAmount - Accepted bid amount
- * @param {string} data.ownerName - Car owner's name
- * @param {string} data.ownerEmail - Car owner's email
+ * @description Sends a bid acceptance notification email with enhanced formatting and details
+ * @param {Object} data - Bid and user information data
+ * @param {string} data.userEmail - Recipient's email address
+ * @param {string} data.userName - Recipient's full name
+ * @param {string} data.carName - Name/model of the car being bid on
+ * @param {number} data.bidAmount - Accepted bid amount value
+ * @param {string} data.ownerName - Car owner's full name
+ * @param {string} data.ownerEmail - Car owner's contact email
  * @param {string} data.ownerPhone - Car owner's phone number (optional)
  * @param {string} data.startDate - Booking start date (optional)
  * @param {string} data.endDate - Booking end date (optional)
- * @param {string} data.city - Car location (optional)
+ * @param {string} data.city - Car location city (optional)
  * @param {string} data.image - Car image URL (optional)
- * @param {string} data.carDetails - Additional car details (optional)
- * @returns {Promise} - Email sending result
+ * @param {string} data.carDetails - Additional car specifications (optional)
+ * @returns {Promise<Object>} - Email sending result information
  */
 const sendBidAcceptedEmail = async (data) => {
   const subject = `Great News! Your Bid for ${data.carName} Has Been Accepted`;
   
-  // Format dates for display if provided
+  /**
+   * @description Formats a date string into a friendly readable format
+   * @param {string} dateString - ISO date string to format
+   * @returns {string} - Formatted date string or empty string if input is invalid
+   */
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -96,7 +102,7 @@ const sendBidAcceptedEmail = async (data) => {
         <p><strong>Car:</strong> ${data.carName}</p>
         ${data.carDetails ? `<p><strong>Details:</strong> ${data.carDetails}</p>` : ''}
         ${data.city ? `<p><strong>Location:</strong> ${data.city}</p>` : ''}
-        <p><strong>Bid Amount:</strong> $${data.bidAmount.toFixed(2)}</p>
+        <p><strong>Bid Amount:</strong> ₹${data.bidAmount.toFixed(2)}</p>
         ${startDate ? `<p><strong>Start Date:</strong> ${startDate}</p>` : ''}
         ${endDate ? `<p><strong>End Date:</strong> ${endDate}</p>` : ''}
         ${durationText}
@@ -141,24 +147,28 @@ const sendBidAcceptedEmail = async (data) => {
 };
 
 /**
- * Send a bid rejection email notification with enhanced details
- * @param {Object} data - Bid and user data
- * @param {string} data.userEmail - User email address
- * @param {string} data.userName - User's name
- * @param {string} data.carName - Name/model of the car
- * @param {number} data.bidAmount - Rejected bid amount
- * @param {string} data.city - Car location (optional)
+ * @description Sends a bid rejection notification email with enhanced formatting and details
+ * @param {Object} data - Bid and user information data
+ * @param {string} data.userEmail - Recipient's email address
+ * @param {string} data.userName - Recipient's full name
+ * @param {string} data.carName - Name/model of the car being bid on
+ * @param {number} data.bidAmount - Rejected bid amount value
+ * @param {string} data.city - Car location city (optional)
  * @param {string} data.image - Car image URL (optional)
- * @param {string} data.carDetails - Additional car details (optional)
- * @param {string} data.startDate - Booking start date (optional)
- * @param {string} data.endDate - Booking end date (optional)
- * @param {string} data.reason - Rejection reason (optional)
- * @returns {Promise} - Email sending result
+ * @param {string} data.carDetails - Additional car specifications (optional)
+ * @param {string} data.startDate - Requested booking start date (optional)
+ * @param {string} data.endDate - Requested booking end date (optional)
+ * @param {string} data.reason - Rejection reason explanation (optional)
+ * @returns {Promise<Object>} - Email sending result information
  */
 const sendBidRejectedEmail = async (data) => {
   const subject = `Update on Your Bid for ${data.carName}`;
   
-  // Format dates for display if provided
+  /**
+   * @description Formats a date string into a friendly readable format
+   * @param {string} dateString - ISO date string to format
+   * @returns {string} - Formatted date string or empty string if input is invalid
+   */
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -209,7 +219,7 @@ const sendBidRejectedEmail = async (data) => {
         <p><strong>Car:</strong> ${data.carName}</p>
         ${data.carDetails ? `<p><strong>Details:</strong> ${data.carDetails}</p>` : ''}
         ${data.city ? `<p><strong>Location:</strong> ${data.city}</p>` : ''}
-        <p><strong>Bid Amount:</strong> $${data.bidAmount.toFixed(2)}</p>
+        <p><strong>Bid Amount:</strong> ₹${data.bidAmount.toFixed(2)}</p>
         ${startDate ? `<p><strong>Requested Start Date:</strong> ${startDate}</p>` : ''}
         ${endDate ? `<p><strong>Requested End Date:</strong> ${endDate}</p>` : ''}
         ${durationText}

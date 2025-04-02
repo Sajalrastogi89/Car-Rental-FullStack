@@ -1,113 +1,141 @@
+/**
+ * @description User Booking Controller - Manages user's car rental booking operations
+ * Handles booking listing, filtering, sorting, and duration calculations for user bookings
+ */
 myApp.controller("userBookingController", [
-  "IndexedDBService",
   "$scope",
-  "$q",
   "BookingService",
-  function (IndexedDBService, $scope, $q,BookingService) {
-    $scope.bookings = []; // declaration and initialization for storing bookings
-    // $scope.selectedFilter="paymentStatus";
-    $scope.selectedSort = "bidAmount"; // Default sort by price low to high
-    $scope.sortBid = {
-      timeStamp: "recent",
-      basePrice: "base price",
-    };
-
-    $scope.filterBooking = {
-      "In Progress": false,
-      "History": true,
-    };
+  "ToastService",
+  function ($scope, BookingService, ToastService) {
+    // ==========================================
+    // State Management
+    // ==========================================
     
-    $scope.currentPageAll = 0; // Used in pagination and represents start page number
-    $scope.isNextPageAvailable = true; // default value for next page availability
-    $scope.isPreviousPageAvailable = false; // default value for previous page unavailability
-    pageSize = 8; // Numbers of cars in each page
-    currentPage = 0;
+    /**
+     * @type {Array}
+     * @description List of all bookings made by the user
+     */
+    $scope.bookings = [];
 
     /**
-     * @description - this will run when page loaded
+     * @type {string}
+     * @description Search query for filtering bookings by car name
      */
-    $scope.init = function () {
+    $scope.search = "";
+
+    /**
+     * @type {string}
+     * @description Current sort option for booking listing
+     */
+    $scope.sortOption = "bidAmount"; // Default sort by bid amount
+
+    /**
+     * @type {string}
+     * @description Selected filter for booking status
+     */
+    $scope.selectedFilter = ""; // Default no status filter
+
+    // Pagination states
+    $scope.totalItems = 0;
+    $scope.currentPage = 1;
+    $scope.maxSize = 5;
+    $scope.itemsPerPage = 10;
+
+    /**
+     * @type {Array}
+     * @description Available sorting options for booking listing
+     */
+    $scope.sortOptions = [
+      { value: "bidAmount", label: "Price: High to Low" },
+      { value: "createdAt", label: "Created Date: New to Old" },
+      { value: "-createdAt", label: "Created Date: Old to New" },
+    ];
+
+    /**
+     * @type {Object}
+     * @description Booking status filter options
+     */
+    $scope.filterBookings = {
+      pending: "pending",
+      paid: "paid",
+    };
+
+    // ==========================================
+    // Initialization
+    // ==========================================
+    
+    /**
+     * @description Initialize the booking dashboard
+     * Loads initial booking data and sets up the view
+     */
+    $scope.init = function() {
       $scope.isLoading = true;
-      BookingService.getAllBookings()
-        .then((allBookings) => {
-          console.log("allBookings",allBookings);
-          $scope.bookings = allBookings;
+      BookingService.getAllBookings({sortBy: "bidAmount"})
+        .then((response) => {
+          $scope.bookings = response.bookings;
+          $scope.totalItems = response.metadata.total;
         })
         .catch((e) => {
-          console.log(e);
+          ToastService.error("Unable to fetch bookings", 3000);
         })
         .finally(() => {
           $scope.isLoading = false;
         });
     };
 
+    // ==========================================
+    // Data Operations
+    // ==========================================
+    
     /**
-     * @description - this will fetch all the bookings from database
-     * and convert image blob to temporary image url
+     * @description Fetch filtered bookings based on current search, filter, and sort options
+     * Updates the booking listing with paginated results
+     * @param {number} currentPage - The page number to fetch
      */
-    let getUserBookings = function (currentPage) {
-      let deferred = $q.defer();
-      const userId = JSON.parse(sessionStorage.getItem("loginData")).id;
-      IndexedDBService.getRecordsUsingPaginationWithIndex(
-        "biddings",
-        "user_id",
-        userId,
-        pageSize,
-        currentPage * pageSize
-      )
-        .then((allBookings) => {
-          const Bookings = allBookings
-          .filter((booking)=>{
-            return booking.status==='accepted'
-          })
-          
-            .map((booking) => {
-              if (booking.car.image instanceof Blob) {
-                booking.car.image = URL.createObjectURL(booking.car.image);
-              }
-              return booking;
-            });
-          deferred.resolve(Bookings);
+    $scope.getUserBookings = function(currentPage) {
+      // Build query parameters
+      let param = {};
+      if ($scope.search) param.carName = $scope.search;
+      if ($scope.selectedFilter) param.status = $scope.selectedFilter;
+      if ($scope.sortOption) param.sortBy = $scope.sortOption;
+      if ($scope.itemsPerPage) param.limit = $scope.itemsPerPage;
+      param.page = currentPage;
+
+      // Fetch filtered bookings
+      BookingService.getAllBookings(param)
+        .then((response) => {
+          $scope.bookings = response.bookings;
+          $scope.totalItems = response.metadata.total;
+          $scope.currentPage = response.metadata.page;
         })
         .catch((e) => {
-          deferred.reject(e);
+          ToastService.error("Unable to fetch bookings", 3000);
         });
-      return deferred.promise;
     };
 
-    $scope.getNextSetOfBookings = function (currentPage) {
-      $scope.isLoading = true;
-      $scope.currentPageAll = currentPage;
-      getUserBookings(currentPage)
-        .then((bookings) => {
-          $scope.isPreviousPageAvailable = currentPage > 0;
-          $scope.isNextPageAvailable = bookings.length == 8;
-          $scope.bookings = bookings;
-        })
-        .catch(()=>{
-          ToastService.error("Unable to fetch cars", 3000);
-        })
-        .finally(()=>{
-          $scope.isLoading=false;
-        })
-    };
-
-    $scope.calculateDays = function (startDate,endDate) {
+    // ==========================================
+    // Utility Functions
+    // ==========================================
+    
+    /**
+     * @description Calculate the duration between two dates in days
+     * @param {Date|string} startDate - Start date of the rental period
+     * @param {Date|string} endDate - End date of the rental period
+     * @returns {number} Number of days between the dates (minimum 1 day)
+     */
+    $scope.calculateDuration = function(startDate, endDate) {
       if (!startDate || !endDate) return 0;
-      
-      // Create date objects
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      
-      // Calculate difference in milliseconds
-      const Diff = Math.abs(end - start);
-      
-      // Convert to days and add 1 to include both start and end date
-      const diffDays = Math.ceil(Diff / (1000 * 3600 * 24)) + 1;
-      
-      return diffDays; // Return at least 1 day
+
+      let start = new Date(startDate);
+      let end = new Date(endDate);
+
+      let diffTime = Math.abs(end - start);
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))+1;
+
+      return diffDays;
     };
 
-
+    // Initialize controller
+    $scope.init();
   },
 ]);

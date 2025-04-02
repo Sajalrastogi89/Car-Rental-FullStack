@@ -5,7 +5,7 @@
   <div class="page-header">
     <h1>Bookings <small>Manage your car bookings</small></h1>
   </div>
-  
+
   <!-- Loading State -->
   <div class="text-center" ng-show="isLoading">
     <uib-progress>
@@ -14,7 +14,7 @@
       </uib-bar>
     </uib-progress>
   </div>
-  
+
   <!-- Content Area (hidden while loading) -->
   <div ng-hide="isLoading">
     <!-- Filter Panel -->
@@ -22,108 +22,194 @@
       <div class="panel-body">
         <div class="row">
           <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-filter"></i> Filter By</span>
-              <select class="form-control" ng-model="selectedFilter">
-                <option ng-repeat="(key, value) in filterBooking" ng-value="{{ value }}">
-                  {{ key }}
+            <div class="form-group">
+              <label for="search"
+                ><i class="fa fa-search"></i> Search Car:</label
+              >
+              <div class="input-group">
+                <span class="input-group-addon"
+                  ><i class="fa fa-search"></i
+                ></span>
+                <input
+                  id="search"
+                  type="text"
+                  class="form-control"
+                  ng-model="search"
+                  placeholder="Search Car..."
+                  ng-change="getUserBookings()"
+                  ng-model-options="{ debounce: 300 }"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="statusFilter"
+                ><i class="fa fa-tag"></i> Status:</label
+              >
+              <select
+                class="form-control"
+                ng-model="selectedFilter"
+                ng-change="getUserBookings()"
+                id="statusFilter"
+              >
+                <option value="">All Statuses</option>
+                <option
+                  ng-repeat="(key, value) in filterBookings"
+                  value="{{ key }}"
+                >
+                  {{ value }}
                 </option>
               </select>
             </div>
           </div>
+
+          <!-- Sort Bar -->
           <div class="col-md-4">
-            <div class="input-group">
-              <span class="input-group-addon"><i class="fa fa-sort"></i> Sort By</span>
-              <select class="form-control" ng-model="selectedSort">
-                <option value="car.name">Car Name (A-Z)</option>
-                <option value="-car.basePrice">Price (High-Low)</option>
-                <option value="car.basePrice">Price (Low-High)</option>
-                <option value="car.startDate">Start Date</option>
+            <div class="form-group">
+              <label for="sortOption"
+                ><i class="fa fa-sort"></i> Sort By:</label
+              >
+              <select
+                class="form-control"
+                ng-model="sortOption"
+                ng-change="getUserBookings()"
+                id="sortOption"
+              >
+                <option
+                  ng-repeat="option in sortOptions"
+                  value="{{option.value}}"
+                >
+                  {{option.label}}
+                </option>
               </select>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Search..." ng-model="searchText">
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="button">
-                  <i class="fa fa-search"></i>
-                </button>
-              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- No Bookings Message -->
     <div class="alert alert-info text-center" ng-show="(bookings).length === 0">
       <i class="fa fa-info-circle fa-2x"></i>
       <p class="lead">No bookings found matching your criteria</p>
     </div>
-    
+
     <!-- Bookings List -->
     <div class="row">
       <div class="col-md-12">
         <uib-accordion close-others="false">
           <!-- Single Booking Item -->
-          <div uib-accordion-group class="panel-default" 
-          ng-class="{
+          <div
+            uib-accordion-group
+            class="panel-default"
+            ng-class="{
             'panel-warning': booking.paymentStatus === 'pending',
             'panel-success': booking.paymentStatus === 'paid',
           }"
-               ng-repeat="booking in bookings">
-            
+            ng-repeat="booking in bookings"
+          >
             <!-- Accordion Heading -->
             <uib-accordion-heading>
               <div class="row">
-                <div class="col-xs-8">
-                  <i class="fa fa-car"></i> 
+                <div class="col-xs-7">
+                  <i class="fa fa-car"></i>
                   <strong>{{ booking.car.carName }}</strong>
-                  <span class="label" ng-class="{
+                  <span
+                    class="label"
+                    ng-class="{
                     'label-success': booking.paymentStatus==='paid',
                     'label-warning': booking.paymentStatus==='pending'
-                  }">
+                  }"
+                  >
                     {{ booking.paymentStatus==='paid' ? 'Paid' : 'Pending' }}
                   </span>
+                  <span
+                    class="label"
+                    ng-class="{'label-info': booking.tripType === 'inCity', 'label-primary': booking.tripType === 'outStation'}"
+                    style="margin-left: 2px"
+                  >
+                    <i
+                      ng-class="{'fa fa-building': booking.tripType === 'inCity', 'fa fa-road': booking.tripType === 'outStation'}"
+                    ></i>
+                    {{booking.tripType === 'outStation' ? 'Outstation' :
+                    'In-City'}}
+                  </span>
                 </div>
-                <div class="col-xs-4 text-right">
-                  <span><i class="fa fa-money"></i>{{ booking.car.basePrice | currency:"₹" }}</span>
-                  <span class="text-muted" style="margin-left: 15px;">
-                    <i class="fa fa-calendar"></i> {{ booking.startDate | date:'MMM d, y' }}
+                <div class="col-xs-5 text-right">
+                  <span
+                    ><i class="fa fa-money"></i>{{ booking.bidAmount |
+                    currency:"₹" }}</span
+                  >
+                  <span class="text-muted" style="margin-left: 15px">
+                    <i class="fa fa-calendar"></i> {{ booking.startDate |
+                    date:'MMM d, y' }}
                   </span>
                 </div>
               </div>
             </uib-accordion-heading>
-            
+
             <!-- Booking Details -->
             <div class="row">
               <!-- Car Details -->
               <div class="col-md-6">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-car"></i> Car Details</h3>
+                    <h3 class="panel-title">
+                      <i class="fa fa-car"></i> Car Details
+                    </h3>
                   </div>
                   <div class="panel-body">
                     <div class="media">
                       <div class="media-left">
-                        <img class="media-object img-thumbnail" ng-src="{{ booking.car.imageUrl }}" alt="{{ booking.car.carName }}" style="max-width: 150px;">
+                        <img
+                          class="media-object img-thumbnail"
+                          ng-src="{{ booking.car.imageUrl }}"
+                          alt="{{ booking.car.carName }}"
+                          style="max-width: 150px"
+                        />
                       </div>
                       <div class="media-body">
                         <h4 class="media-heading">{{ booking.car.carName }}</h4>
                         <div class="row">
                           <div class="col-xs-6">
                             <ul class="list-unstyled">
-                              <li><strong>Traveled:</strong> {{ booking.car.travelled || 0 }} km</li>
-                              <li><strong>Base Price:</strong> {{ booking.car.basePrice | currency:"₹" }}</li>
-                              <li><strong>Price per Km:</strong> {{ booking.car.pricePerKm | currency:"₹" }}</li>
+                              <li>
+                                <strong>Traveled:</strong> {{
+                                booking.car.travelled || 0 }} km
+                              </li>
+                              <li>
+                                <strong>Base Price:</strong> {{
+                                booking.car.basePrice | currency:"₹" }}
+                              </li>
+                              <li>
+                                <strong>Price per Km:</strong> {{
+                                booking.car.pricePerKm | currency:"₹" }}
+                              </li>
+                              <li ng-if="booking.tripType === 'outStation'">
+                                <strong>Outstation:</strong>
+                                {{booking.car.outStationCharges |
+                                currency:"₹"}}/day
+                              </li>
                             </ul>
                           </div>
                           <div class="col-xs-6">
                             <ul class="list-unstyled">
-                              <li><strong>Start Date:</strong> {{ booking.startDate | date:'MMM d, y' }}</li>
-                              <li><strong>End Date:</strong> {{ booking.endDate | date:'MMM d, y' }}</li>
-                              <li><strong>Duration:</strong> {{ calculateDuration(booking.startDate, booking.endDate) }} days</li>
+                              <li>
+                                <strong>Start Date:</strong> {{
+                                booking.startDate | date:'MMM d, y' }}
+                              </li>
+                              <li>
+                                <strong>End Date:</strong> {{ booking.endDate |
+                                date:'MMM d, y' }}
+                              </li>
+                              <li>
+                                <strong>Duration:</strong> {{
+                                calculateDuration(booking.startDate,
+                                booking.endDate) }} days
+                              </li>
                             </ul>
                           </div>
                         </div>
@@ -132,101 +218,147 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- User Details -->
               <div class="col-md-6">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-user"></i> User Details</h3>
+                    <h3 class="panel-title">
+                      <i class="fa fa-user"></i> User Details
+                    </h3>
                   </div>
                   <div class="panel-body">
                     <div class="media" ng-if="booking.user">
                       <div class="media-left">
-                        <img class="media-object img-circle" ng-src="assets\img\default.png" alt="{{ booking.user.name }}" style="width: 64px; height: 64px;">
+                        <img
+                          class="media-object img-circle"
+                          ng-src="assets\img\default.png"
+                          alt="{{ booking.user.name }}"
+                          style="width: 64px; height: 64px"
+                        />
                       </div>
                       <div class="media-body">
                         <h4 class="media-heading">{{ booking.user.name }}</h4>
-                        <p><i class="fa fa-envelope"></i> {{ booking.user.email }}</p>
-                        <p><i class="fa fa-phone"></i> {{ booking.user.phone || 'N/A' }}</p>
+                        <p>
+                          <i class="fa fa-envelope"></i> {{ booking.user.email
+                          }}
+                        </p>
+                        <p>
+                          <i class="fa fa-phone"></i> {{ booking.user.phone ||
+                          'N/A' }}
+                        </p>
                       </div>
                     </div>
                     <div class="alert alert-warning" ng-if="!booking.user">
-                      <i class="fa fa-exclamation-triangle"></i> User details not available
+                      <i class="fa fa-exclamation-triangle"></i> User details
+                      not available
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+           
+
             <!-- Actions Row -->
             <div class="row">
               <div class="col-md-12">
                 <!-- Starting Odometer Reading for bookings that start today -->
-                <div class="panel panel-info" ng-if="(booking.startDate | date:'yyyy-MM-dd') === (today | date:'yyyy-MM-dd') && booking.paymentStatus==='pending' && !booking.startOdometer">
+                <div
+                  class="panel panel-info"
+                  ng-if="shouldShowStartOdometer(booking) && booking.paymentStatus==='pending' && !booking.startOdometer"
+                >
                   <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-tachometer"></i> Enter Starting Odometer Reading</h3>
+                    <h3 class="panel-title">
+                      <i class="fa fa-tachometer"></i> Enter Starting Odometer
+                      Reading
+                    </h3>
                   </div>
                   <div class="panel-body">
                     <div class="row">
                       <div class="col-sm-8">
                         <div class="input-group">
-                          <span class="input-group-addon">Starting Odometer (km)</span>
-                          <input type="number" class="form-control" 
-                                 ng-model="booking.startOdometer" 
-                                 placeholder="Enter current odometer value (min: {{booking.car.travelled}} km)"
-                                 min="{{booking.car.travelled}}" 
-                                 ng-min="booking.car.travelled">
+                          <span class="input-group-addon"
+                            >Starting Odometer (km)</span
+                          >
+                          <input
+                            type="number"
+                            class="form-control"
+                            ng-model="booking.startOdometerValue"
+                            placeholder="Enter current odometer value (min: {{booking.car.travelled}} km)"
+                            min="{{booking.car.travelled}}"
+                            ng-min="booking.car.travelled"
+                          />
                           <span class="input-group-btn">
-                            <button class="btn btn-primary" 
-                                    ng-click="saveOdometerValue(booking,'start')" 
-                                    ng-disabled="!booking.startOdometer || booking.startOdometer < booking.car.travelled">
+                            <button
+                              class="btn btn-primary"
+                              ng-click="saveOdometerValue(booking,'start')"
+                              ng-disabled="!booking.startOdometerValue || booking.startOdometerValue < booking.car.travelled"
+                            >
                               <i class="fa fa-save"></i> Submit
                             </button>
                           </span>
                         </div>
-                        <div class="text-danger" ng-if="booking.startOdometer < booking.car.travelled">
-                          <i class="fa fa-exclamation-triangle"></i> Value must be at least {{booking.car.travelled}} km
+                        <div
+                          class="text-danger"
+                          ng-if="booking.startOdometerValue < booking.car.travelled"
+                        >
+                          <i class="fa fa-exclamation-triangle"></i> Value must
+                          be at least {{booking.car.travelled}} km
                         </div>
                       </div>
                       <div class="col-sm-4">
-                        <div class="alert alert-info" style="margin-bottom: 0;">
-                          <i class="fa fa-info-circle"></i> Record the starting odometer value
+                        <div class="alert alert-info" style="margin-bottom: 0">
+                          <i class="fa fa-info-circle"></i> Record the starting
+                          odometer value
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Ending Odometer Reading for bookings that end today -->
-                <div class="panel panel-warning" 
-                ng-if="isOnOrBeforeToday(booking.endDate) && booking.startOdometer && booking.paymentStatus==='pending'">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-tachometer"></i> Enter Ending Odometer Reading</h3>
+                <div
+                  class="panel panel-warning"
+                  ng-if="shouldShowEndOdometer(booking) && !!booking.startOdometer && booking.paymentStatus === 'pending'"
+                >
+                  <div class="panel-heading">
+                    <h3 class="panel-title">
+                      <i class="fa fa-tachometer"></i> Enter Ending Odometer Reading
+                    </h3>
                   </div>
                   <div class="panel-body">
                     <div class="row">
                       <div class="col-sm-8">
                         <div class="input-group">
                           <span class="input-group-addon">Ending Odometer (km)</span>
-                          <input type="number" class="form-control" 
-                                 ng-model="booking.endOdometer" 
-                                 placeholder="Enter final odometer value (min: {{booking.startOdometer}} km)"
-                                 min="{{booking.startOdometer}}" 
-                                 ng-min="booking.startOdometer">
+                          <input
+                            type="number"
+                            class="form-control"
+                            ng-model="booking.endOdometerValue"
+                            placeholder="Enter final odometer value (min: {{booking.startOdometer}} km)"
+                            min="{{booking.startOdometer}}"
+                            ng-min="booking.startOdometer"
+                          />
                           <span class="input-group-btn">
-                            <button class="btn btn-warning" 
-                                    ng-click="saveOdometerValue(booking,'end')" 
-                                    ng-disabled="!booking.endOdometer || booking.endOdometer < booking.startOdometer">
+                            <button
+                              class="btn btn-warning"
+                              ng-click="saveOdometerValue(booking, 'end')"
+                              ng-disabled="!booking.endOdometerValue || booking.endOdometerValue < booking.startOdometer"
+                            >
                               <i class="fa fa-save"></i> Submit
                             </button>
                           </span>
                         </div>
-                        <div class="text-danger" ng-if="booking.endOdometer < booking.startOdometer">
-                          <i class="fa fa-exclamation-triangle"></i> Value must be at least {{booking.startOdometer}} km
+                        <div
+                          class="text-danger"
+                          ng-if="booking.endOdometer < booking.startOdometer"
+                        >
+                          <i class="fa fa-exclamation-triangle"></i> Value must be at least
+                          {{booking.startOdometer}} km
                         </div>
                       </div>
                       <div class="col-sm-4">
-                        <div class="alert alert-warning" style="margin-bottom: 0;">
+                        <div class="alert alert-warning" style="margin-bottom: 0">
                           <i class="fa fa-info-circle"></i> Record the final odometer value
                         </div>
                       </div>
@@ -234,33 +366,17 @@
                   </div>
                 </div>
 
-                <!-- Warning when end date is today but no start odometer reading -->
-                <div class="panel panel-danger" 
-                     ng-if="(booking.endDate | date:'yyyy-MM-dd') === (today | date:'yyyy-MM-dd') && !booking.startOdometer && booking.paymentStatus==='pending'">
-                  <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> Cannot Enter End Odometer</h3>
-                  </div>
-                  <div class="panel-body">
-                    <div class="alert alert-danger">
-                      <i class="fa fa-ban"></i> Please record the starting odometer reading first.
-                      <span ng-if="(booking.startDate | date:'yyyy-MM-dd') === (today | date:'yyyy-MM-dd')">
-                        <br>Enter the starting odometer value in the panel above.
-                      </span>
-                      <span ng-if="(booking.startDate | date:'yyyy-MM-dd') !== (today | date:'yyyy-MM-dd')">
-                        <br>The start date has passed without recording the odometer value. Please contact support.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-             
-
                 
-                
+
                 <!-- Invoice for paid bookings -->
-                <div class="panel panel-success" ng-if="booking.paymentStatus==='paid'">
+                <div
+                  class="panel panel-success"
+                  ng-if="booking.paymentStatus==='paid'"
+                >
                   <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-file-text"></i> Payment Information</h3>
+                    <h3 class="panel-title">
+                      <i class="fa fa-file-text"></i> Payment Information
+                    </h3>
                   </div>
                   <div class="panel-body">
                     <div class="row">
@@ -273,7 +389,10 @@
                         </dl>
                       </div>
                       <div class="col-sm-6 text-right">
-                        <button class="btn btn-primary" ng-click="getInvoice(booking)">
+                        <button
+                          class="btn btn-primary"
+                          ng-click="getInvoice(booking)"
+                        >
                           <i class="fa fa-file-pdf-o"></i> Download Invoice
                         </button>
                       </div>
@@ -288,5 +407,16 @@
     </div>
   </div>
 
-
+  <div class="text-center">
+    <ul
+      uib-pagination
+      total-items="totalItems"
+      ng-model="currentPage"
+      ng-change="getUserBookings(currentPage)"
+      items-per-page="itemsPerPage"
+      max-size="maxSize"
+      class="pagination-sm"
+      boundary-link-numbers="true"
+    ></ul>
+  </div>
 </div>

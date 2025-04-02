@@ -1,19 +1,21 @@
+/**
+ * @description Chat Service - Handles real-time chat operations between users and car owners
+ * Provides methods for chat creation, message handling, and conversation management
+ */
 myApp.service("chatService", [
-  "IndexedDBService",
   "$q",
   "ToastService",
   "$http",
-  function (IndexedDBService, $q, ToastService, $http) {
-
+  function ($q, ToastService, $http) {
+    // ==========================================
+    // Chat Management
+    // ==========================================
+    
     /**
-     * @description - Creates a new chat or returns existing chat between users
-     * @param {String} userName 
-     * @param {String} ownerName 
-     * @param {String} owner_id 
-     * @param {String} user_id 
-     * @param {Object} car
-     * @param {String} customMessage - Optional custom first message 
-     * @returns {Promise} resolves with {chatId, isNew, message}
+     * @description Create a new chat or retrieve existing chat between user and owner
+     * @param {Object} owner - The car owner's details
+     * @param {Object} car - The car details for the chat context
+     * @returns {Promise<Object>} Promise resolving to chat details {_id, participants, messages, etc.}
      */
     this.addChat = function (owner, car) {
       let deferred = $q.defer();
@@ -21,7 +23,6 @@ myApp.service("chatService", [
         "car":car,
         "owner":owner,
       };
-      console.log("chat object", chatObject);
       $http.post("http://localhost:8000/api/chat/addNewChat",chatObject) 
       .then((response) => {
         socket = io("http://127.0.0.1:8080");
@@ -30,7 +31,6 @@ myApp.service("chatService", [
       }
       )
       .catch((e) => {
-        console.error("Error adding chat:", e);
         deferred.reject(e);
       }
       );
@@ -38,44 +38,19 @@ myApp.service("chatService", [
       return deferred.promise;
     };
 
+    // ==========================================
+    // Chat Retrieval
+    // ==========================================
+    
     /**
-     * @description - Checks if a chat already exists between the specified owner and user
-     * @param {String} owner_id 
-     * @param {String} user_id 
-     * @returns {Promise} resolves with existing chat object or null
-     */
-    this.checkExistingChat = function(owner_id, user_id) {
-      let deferred = $q.defer();
-      
-      // Get all chats for this owner
-      IndexedDBService.getRecordsUsingIndex("chat", "owner_id", owner_id)
-        .then((ownerChats) => {
-          // Filter to find chats with the specific user
-          const existingChat = ownerChats.find(chat => 
-            chat.owner.id === owner_id && chat.user.id === user_id
-          );
-          
-          deferred.resolve(existingChat || null);
-        })
-        .catch((e) => {
-          console.error("Error checking existing chats:", e);
-          deferred.reject(e);
-        });
-        
-      return deferred.promise;
-    };
-
-    /**
-     * @description - this will get chats related to user from database 
-     * @param {String} indexName 
-     * @returns array of objects
+     * @description Fetch all chats associated with the current user
+     * @returns {Promise<Array>} Promise resolving to array of chat objects
      */
     this.getChats = function(){
       let deferred=$q.defer();
       $http
       .get("http://localhost:8000/api/chat/getChats")
       .then((response)=>{
-        console.log("allChats",response.data);
         deferred.resolve(response.data);
       }).catch((e)=>{
         deferred.reject(e);
@@ -84,16 +59,14 @@ myApp.service("chatService", [
     }
 
     /**
-     * @description - this will fetch convertation related to that chat id
-     * @param {Number} id 
-     * @returns array of objects
+     * @description Fetch conversation history for a specific chat
+     * @param {string} id - The chat ID to fetch conversation for
+     * @returns {Promise<Array>} Promise resolving to array of message objects
      */
     this.getSelectedChatData = function(id){
-      console.log("getSelectedChat");
       let deferred=$q.defer();
      $http.get(`http://localhost:8000/api/chat/getConversation/${id}`)
       .then((allConversation)=>{
-        console.log(allConversation);
         deferred.resolve(allConversation.data);
       }).catch((e)=>{
         deferred.reject(e);
@@ -101,10 +74,15 @@ myApp.service("chatService", [
       return deferred.promise;
     }
 
+    // ==========================================
+    // Message Operations
+    // ==========================================
+    
     /**
-     * @description - this will add new message to database
-     * @param {Object} messageData 
-     * @returns {Object|String}
+     * @description Send a new message in a chat
+     * @param {string} id - The chat ID to send message to
+     * @param {FormData} messageData - The message data including text and/or image
+     * @returns {Promise<Object>} Promise resolving to the sent message details
      */
     this.addNewMessage = function(id,messageData){
       let deferred=$q.defer();    
@@ -119,7 +97,7 @@ myApp.service("chatService", [
         deferred.resolve(messageData.data);
       })
       .catch((e)=>{
-        deferred.reject("message not added");
+        deferred.reject("Failed to send message");
       })
      return deferred.promise;
     }

@@ -74,6 +74,10 @@ const userSubModelSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
+  phone: {
+    type: String,
+    trim: true,
+  },
   role: {
     type: String,
     required: true,
@@ -87,6 +91,10 @@ const bookingSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       default: 'pending',
+    },
+    tripType: {
+      type: String,
+      // required: true,
     },
     totalAmount: {
       type: Number,
@@ -129,6 +137,7 @@ const bookingSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+
     car: carSubModelSchema,
     user: userSubModelSchema,
     owner: userSubModelSchema,

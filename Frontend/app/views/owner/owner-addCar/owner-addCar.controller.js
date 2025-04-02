@@ -1,28 +1,84 @@
+/**
+ * @description Add Car Controller - Manages the car addition process for owners
+ * Handles car data collection, validation, and submission with image upload
+ */
 myApp.controller("AddCar", [
   "$scope",
-  "IndexedDBService",
   "ToastService",
-  "DashboardService",
-  function ($scope, IndexedDBService, ToastService,DashboardService) {
-    // Predefined categories of cars
-    $scope.categories = ["Sedan", "SUV", "Hatchback", "Convertible"];
-    $scope.availableFeatures = [
-      'Air Conditioning', 
-      'Power Steering',
-      'Power Windows',
-      'ABS',
-      'Airbags',
-      'Bluetooth',
-      'Cruise Control',
-      'Parking Sensors',
-      'Backup Camera',
-      'Sunroof'
-    ];
+  "CITIES", // Inject the constants
+  "CATEGORIES",
+  "FEATURES",
+  "FUEL_TYPES",
+  "CarService",
+  "CarFactory",
+  function (
+    $scope,
+    ToastService,
+    CITIES,
+    CATEGORIES,
+    FEATURES,
+    FUEL_TYPES,
+    CarService,
+    CarFactory
+  ) {
+    // ==========================================
+    // State Management
+    // ==========================================
+    
+    /**
+     * @type {Array}
+     * @description Available car categories from constants
+     */
+    $scope.categories = CATEGORIES;
+
+    /**
+     * @type {Array}
+     * @description List of all possible features a car can have
+     */
+    $scope.availableFeatures = FEATURES;
+
+    /**
+     * @type {Array}
+     * @description Currently selected features for the car (max 3)
+     */
     $scope.selectedFeatures = [];
 
-    $scope.toggleFeature = function(feature) {
+    /**
+     * @type {Array}
+     * @description Available fuel types from constants
+     */
+    $scope.fuelTypes = FUEL_TYPES;
+
+    /**
+     * @type {Array}
+     * @description Available cities from constants
+     */
+    $scope.cities = CITIES;
+
+    /**
+     * @type {Object}
+     * @description Car data object to be submitted
+     */
+    $scope.car = {};
+
+    /**
+     * @type {string}
+     * @description Regex pattern for numeric validation
+     */
+    $scope.onlyNumbers = "/^[1-9][0-9]*$/";
+
+    // ==========================================
+    // Feature Management
+    // ==========================================
+    
+    /**
+     * @description Toggle a feature selection for the car
+     * Maintains a maximum of 3 selected features
+     * @param {string} feature - The feature to toggle
+     */
+    $scope.toggleFeature = function (feature) {
       let idx = $scope.selectedFeatures.indexOf(feature);
-      
+
       // Is currently selected
       if (idx > -1) {
         $scope.selectedFeatures.splice(idx, 1);
@@ -33,76 +89,59 @@ myApp.controller("AddCar", [
       }
     };
 
-    // Predefined fuel types
-    $scope.fuelTypes = ["Petrol", "Diesel", "Electric"];
-
-    // Predefined list of cities
-    $scope.cities = [
-      "Delhi",
-      "Mumbai",
-      "Bengaluru",
-      "Chennai",
-      "Kolkata",
-      "Hyderabad",
-      "Pune",
-      "Ahmedabad",
-      "Jaipur",
-      "Chandigarh",
-      "Lucknow",
-      "Kochi",
-      "Bhopal",
-      "Indore",
-      "Surat",
-      "Agra",
-      "Patna",
-      "Vadodara",
-      "Goa",
-      "Shimla",
-      "Rishikesh",
-      "Manali",
-      "Mussoorie",
-      "Coimbatore",
-      "Tiruchirappalli",
-      "Jodhpur",
-      "Udaipur",
-      "Mysore",
-      "Varanasi",
-    ];
-
-    // Initialize car object
-    $scope.car = {};
-    $scope.onlyNumbers = "/^[1-9][0-9]*$/";
-
+    // ==========================================
+    // Image Handling
+    // ==========================================
+    
     /**
-     * Handles image upload and converts it to a Blob
-     * @param {*} element - The input element containing the file
+     * @description Handle car image upload
+     * Stores the selected file in the car object
+     * @param {HTMLElement} element - The file input element
      */
     $scope.uploadImage = function (element) {
-      $scope.car.image=element.files[0];
+      $scope.car.image = element.files[0];
     };
 
-    // Form submission handler
-    $scope.addCar = function () {
-      const formData = new FormData();
+    // ==========================================
+    // Form Submission
+    // ==========================================
     
-      $scope.car.features=JSON.stringify($scope.selectedFeatures);
-     
+    /**
+     * @description Handle car data submission
+     * Validates car data, creates FormData with image,
+     * and submits to the server
+     */
+    $scope.addCar = function () {
+      console.log("addCar", $scope.car);
+      $scope.car.features = ($scope.selectedFeatures);
+      
+      // Basic validation
+      let validationResult = CarFactory.validateCarData($scope.car);
+      if (!validationResult.isValid) {
+        ToastService.error(validationResult.errors[0], 3000);
+        return;
+      }
+      const formData = new FormData();
+      
+      $scope.car.features = JSON.stringify($scope.selectedFeatures);
+
       for (const key in $scope.car) {
-        console.log("key",key,$scope.car[key]);
-          formData.append(key, $scope.car[key]);
+        formData.append(key, $scope.car[key]);
       }
-      console.log("FormData contents:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + (pair[1]));
-      }
-      // Add car record to IndexedDB
-      DashboardService.addCarData(formData)
+
+      // Add car record
+      CarService.addCarData(formData)
         .then(() => {
           $scope.car = {}; // Reset car object
-          ToastService.success("Car added successfully",3000); // Show success toast
+          $scope.selectedFeatures = []; // Also reset selected features
+          $scope.carForm.$setPristine();
+          ToastService.success("Car added successfully", 3000); // Show success toast
         })
-        .catch((e) => {
-          ToastService.error(e,3000); // Show error toast
+        .catch((error) => {
+          // More robust error handling
+          const errorMessage =
+            error.data?.message || error.statusText || "Failed to add car";
+          ToastService.error(errorMessage, 3000); // Show error toast
         });
     };
   },

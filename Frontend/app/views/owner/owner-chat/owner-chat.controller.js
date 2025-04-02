@@ -1,32 +1,49 @@
-myApp.controller("ownerChatController", ["$scope", "chatService", "$timeout", 
-  function ($scope, chatService, $timeout) {
-    // Basic data initialization
-    $scope.chats = []; 
+/**
+ * @description Owner Chat Controller - Handles real-time chat functionality for car owners
+ */
+myApp.controller("ownerChatController", [
+  "$scope",
+  "chatService",
+  "$timeout",
+  "ToastService",
+  function ($scope, chatService, $timeout, ToastService) {
+    // ==========================================
+    // State Management
+    // ==========================================
+    
+    // Chat state
+    $scope.chats = [];
     $scope.messages = [];
     $scope.currentMessage = { messageText: "" };
     $scope.selectedChat = null;
     $scope.isLoading = false;
     let socket;
-    
-    // Get owner ID from session storage
+
+    // Owner authentication
     const ownerData = JSON.parse(sessionStorage.getItem('loginData') || '{}');
     $scope.ownerId = ownerData.id || ownerData.email;
-    
-    // Image handling variables
+
+    // Image upload state
     $scope.imageToUpload = null;
     $scope.imagePreviewUrl = null;
     $scope.imageModalUrl = null;
     $scope.uploadingImage = false;
 
+    // ==========================================
+    // Initialization
+    // ==========================================
+    
     /**
-     * @description - Initialize controller
+     * @description Initialize the chat controller - Sets up socket connection and loads initial chats
      */
     $scope.init = function() {
       $scope.isLoading = true;
+      
+      // Initialize socket connection
       socket = io("http://localhost:8000");
 
+      // Listen for new messages
       socket.on("newMessage", function (data) {
-        console.log("Message received in new message ", data);
         if ($scope.selectedChat && data.chatId === $scope.selectedChat._id) {
           $timeout(function () {
             $scope.messages.push(data);
@@ -35,237 +52,218 @@ myApp.controller("ownerChatController", ["$scope", "chatService", "$timeout",
         }
       });
 
+      // Load initial chats
       $scope.getAllChats()
         .finally(() => {
           $scope.isLoading = false;
         });
     };
-  
+
+    // ==========================================
+    // Chat Operations
+    // ==========================================
+    
     /**
-     * @description - Fetch all chats for the owner
+     * @description Fetch all chats for the owner from the server
+     * @returns {Promise} Promise that resolves with chat data
      */
     $scope.getAllChats = function() {
       return chatService.getChats()
         .then((allChats) => {
-          console.log(allChats);
           $scope.chats = allChats || [];
         })
         .catch((e) => {
-          console.log("Error fetching chats:", e);
+          ToastService.error("Unable to fetch chats", 3000);
         });
     };
-  
+
     /**
-     * @description - Select a chat and load its messages
+     * @description Select a chat and load its messages from the server
+     * @param {Object} chat - The chat to select and load
      */
     $scope.selectChat = function(chat) {
-
       $scope.selectedChat = chat;
-    
-      // Clear previous messages and image data
+      
+      // Reset states
       $scope.messages = [];
       $scope.cancelImageUpload();
       $scope.isLoading = true;
-    
-    
-      socket.emit("joinChat", chat._id); // chat._id acts as the room ID
-    
+
+      // Join chat room
+      socket.emit("joinChat", chat._id);
+
+      // Load chat messages
       chatService.getSelectedChatData(chat._id)
         .then((conversation) => {
           $scope.messages = conversation || [];
-    
-          // Scroll to bottom of messages after they load
-          $timeout(function() {
-            scrollToBottom();
-          }, 100);
+          scrollToBottom();
         })
         .catch((e) => {
-          console.log("Error loading conversation:", e);
+          ToastService.error("Unable to fetch chat data", 3000);
         })
         .finally(() => {
           $scope.isLoading = false;
         });
     };
+
+    // ==========================================
+    // Message Handling
+    // ==========================================
     
     /**
-     * @description - Send message (text or image)
+     * @description Initiate the message sending process after validation
+     * @param {string} messageText - The message text to send
      */
     $scope.sendMessage = function(messageText) {
-      if (!$scope.selectedChat) {
-        return;
-      }
+      // Validate chat selection and message content
+      if (!$scope.selectedChat) return;
+      if ((!messageText || !messageText.trim()) && !$scope.imageToUpload) return;
       
-      // Don't send if no text AND no image
-      if ((!messageText || !messageText.trim()) && !$scope.imageToUpload) {
-        return;
-      }
-      
-      if ($scope.imageToUpload) {
-        console.log("image");
-        // Handle image message
-        sendImageMessage(messageText);
-      } else {
-        // Handle text message
-        sendTextMessage(messageText);
-      }
+      sendChatMessage(messageText);
     };
-    
+
     /**
-     * @description - Send a text message
+     * @description Send a chat message with optional image attachment to the server
+     * @param {string} messageText - The message text to send
+     * @private
      */
-    function sendTextMessage(messageText) {
-      console.log("selected chat owner id", $scope.selectedChat);
-     
-      let formData = new FormData();
-      formData.append('message', messageText);
-      // Create message data
-      // let messageData = {
-      //   message: messageText,
-      //   chatId: $scope.selectedChat._id,
-      //   sender: $scope.selectedChat.owner._id,
-      //   createdAt: new Date()
-      // };
-      
-      
-      // Save to database
+    function sendChatMessage(messageText) {
+      const formData = new FormData();
+
+      // Prepare message data
+      if (messageText) {
+        formData.append('message', messageText);
+      }
+
+      // Handle image attachment
+      if ($scope.imageToUpload) {
+        if (!$scope.imagePreviewUrl) return;
+        
+        formData.append('image', $scope.imageToUpload);
+        $scope.uploadingImage = true;
+      }
+
+      // Send message to server
       chatService.addNewMessage($scope.selectedChat._id, formData)
-      .then((messageData) => {    
-        socket.emit("sendMessage", messageData.data);
-        console.log("message sent", messageData.data);
-        // Clear the message input after sending
-        $scope.currentMessage.messageText = "";
-      })
-      .catch((error) => {
-        console.error("Error saving message:", error);
-      });
+        .then((messageData) => {
+          // Emit message via socket
+          socket.emit("sendMessage", messageData.data);
+          $scope.currentMessage.messageText = "";
+        })
+        .catch((error) => {
+          const errorMessage = $scope.imageToUpload 
+            ? "Error sending message" 
+            : "Unable to add message";
+          ToastService.error(errorMessage, 3000);
+        })
+        .finally(() => {
+          if ($scope.imageToUpload) {
+            $scope.uploadingImage = false;
+            $scope.cancelImageUpload();
+          }
+        });
     }
+
+    // ==========================================
+    // Image Handling
+    // ==========================================
     
     /**
-     * @description - Handle file selection
+     * @description Handle image file selection, validation, and preview generation
+     * @param {HTMLElement} element - The file input element containing the selected image
      */
     $scope.prepareImageUpload = function(element) {
-      if (!element.files || !element.files[0]) {
-        return;
-      }
+      if (!element.files?.[0]) return;
       
       const file = element.files[0];
       
-      // Validate image
+      // Validate image before processing
       if (!isValidImage(file)) {
         alert("Please select a valid image file (JPG, PNG or GIF) under 5MB.");
         element.value = '';
         return;
       }
-      
-      // Process the image
+
+      // Set up image preview
       $scope.imageToUpload = file;
-      
-      // Create preview
       const reader = new FileReader();
+      
       reader.onload = function(e) {
-        $timeout(function() {
+        $timeout(() => {
           $scope.imagePreviewUrl = e.target.result;
         });
       };
-      
+
       reader.onerror = function() {
         alert("Error preparing image. Please try again.");
         $scope.cancelImageUpload();
       };
-      
+
       reader.readAsDataURL(file);
     };
-    
+
     /**
-     * @description - Cancel image upload
+     * @description Reset all image upload related states and clear the file input
      */
     $scope.cancelImageUpload = function() {
       $scope.imageToUpload = null;
       $scope.imagePreviewUrl = null;
       
-      // Clear file input
       const fileInput = document.getElementById('imageUpload');
-      if (fileInput) {
-        fileInput.value = '';
-      }
+      if (fileInput) fileInput.value = '';
     };
+
+    // ==========================================
+    // Utility Functions
+    // ==========================================
     
     /**
-     * @description - Send an image message
-     */
-    function sendImageMessage(messageText) {
-      if (!$scope.imagePreviewUrl) {
-        return;
-      }
-      
-      // Set loading state
-      $scope.uploadingImage = true;
-      const formData = new FormData();
-      formData.append('image', $scope.imageToUpload);
-      formData.append('message', messageText);
-      
-      // Save to database
-      chatService.addNewMessage($scope.selectedChat._id, formData)
-      .then((messageData) => {
-        console.log("image sent", messageData);
-        socket.emit("sendMessage", messageData.data);
-        // Clear the message input after sending
-        $scope.currentMessage.messageText = "";
-      })
-      .catch((error) => {
-        console.error("Error sending image:", error);
-      })
-      .finally(() => {
-        $scope.uploadingImage = false;
-        $scope.cancelImageUpload();
-      });
-    }
-    
-    /**
-     * @description - Handle Enter key for sending messages
+     * @description Handle Enter key press for message sending, preventing new line on plain Enter
+     * @param {Event} event - Keyboard event object
      */
     $scope.handleKeyPress = function(event) {
       if (event.keyCode === 13 && !event.shiftKey) {
         event.preventDefault();
         $scope.sendMessage($scope.currentMessage.messageText);
-        console.log("image");
       }
     };
-    
-  
+
     /**
-     * @description - Scroll to bottom of messages
+     * @description Scroll the chat messages container to the bottom
+     * @private
      */
     function scrollToBottom() {
-      $timeout(function() {
+      $timeout(() => {
         const container = document.getElementById('messagesContainer');
         if (container) {
           container.scrollTop = container.scrollHeight;
         }
       }, 20);
     }
-    
+
     /**
-     * @description - Validate image file
+     * @description Validate image file type and size constraints
+     * @param {File} file - The file to validate
+     * @returns {boolean} Whether the file meets all validation criteria
+     * @private
      */
     function isValidImage(file) {
-      // Check type
+      // Validate file type
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         return false;
       }
-      
-      // Check size (max 5MB)
+
+      // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         return false;
       }
-      
+
       return true;
     }
-    
-   
 
-    // Initialize
+    // Initialize controller
     $scope.init();
-  }]);
+  }
+]);
