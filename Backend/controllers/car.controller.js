@@ -165,7 +165,7 @@ let getCars = async (req, res) => {
       category, 
       fuelType, 
       sortBy = "createdAt", 
-      sortOrder = 1, 
+      sortOrder = -1, 
       page = 1, 
       limit = 3
     } = req.query;

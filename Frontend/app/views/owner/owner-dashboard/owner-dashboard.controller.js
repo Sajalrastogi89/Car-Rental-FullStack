@@ -31,7 +31,7 @@ myApp.controller("OwnerDashboardController", [
     
     // Sort options
     $scope.sortOptions = [
-      { value: "basePrice", label: "Price: Low to High" },
+      { value: "basePrice", label: "Price: High to Low" },
       { value: "carName", label: "Name (A-Z)" },
       { value: "travelled", label: "Kilometers Travelled" },
     ];
@@ -69,7 +69,7 @@ myApp.controller("OwnerDashboardController", [
       async.parallel({
         // Fetch all cars
         cars: function (callback) {
-          CarService.getCars()
+          CarService.getCars({sortBy: "basePrice"})
             .then(function (allCars) {
               callback(null, allCars);
             })

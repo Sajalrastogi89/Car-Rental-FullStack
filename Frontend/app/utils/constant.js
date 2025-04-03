@@ -31,7 +31,7 @@ myApp.constant('CITIES', [
 ])
 
 myApp.constant('CATEGORIES', [
-  "SUV",
+  "Suv",
   "Sedan",
   "Hatchback",
   "Luxury",

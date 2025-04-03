@@ -166,10 +166,8 @@ myApp.controller("ownerBookingController", [
       } else if (type === 'end') {
         odometerValue = booking.endOdometerValue;
       }
-      console.log("booking", booking);
       BookingService.updateStartOdometer(booking._id, odometerValue, type, booking.car._id)
         .then((updatedBooking) => {
-          console.log("updatedBooking", updatedBooking);
           // Update booking with new values
           booking.car.travelled = updatedBooking.booking.car.travelled;
           booking.startOdometer = updatedBooking.booking.startOdometer; 

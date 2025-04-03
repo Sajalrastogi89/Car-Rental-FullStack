@@ -36,7 +36,7 @@ let login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({
       status: false, 
-      message: "Invalid email" 
+      message: "Email not found" 
     });
 
     // Verify password using bcrypt

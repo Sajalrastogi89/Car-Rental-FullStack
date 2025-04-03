@@ -100,6 +100,7 @@ myApp.controller("SuperAdminAnalysisController", [
         .then(response => {
           if (response.data.success) {
             $scope.analytics = response.data.data;
+            console.log("analytics", $scope.analytics);
             $scope.renderCharts();
           } else {
             $scope.error = "Failed to load analytics data.";
@@ -214,6 +215,12 @@ myApp.controller("SuperAdminAnalysisController", [
               grid: {
                 drawOnChartArea: false,
               },
+              ticks: {
+                precision: 0,
+                callback: function(value) {
+                  return Math.round(value);
+                }
+              }
             }
           },
           plugins: {
@@ -231,7 +238,7 @@ myApp.controller("SuperAdminAnalysisController", [
                   if (context.dataset.label.includes('Revenue')) {
                     return label + '₹' + context.raw.toLocaleString();
                   }
-                  return label + context.raw;
+                  return label + Math.round(context.raw);
                 }
               }
             }
@@ -556,6 +563,12 @@ myApp.controller("SuperAdminAnalysisController", [
               title: {
                 display: true,
                 text: 'Number of Cars'
+              },
+              ticks: {
+                precision: 0,
+                callback: function(value) {
+                  return Math.round(value);
+                }
               }
             }
           }
@@ -615,7 +628,14 @@ myApp.controller("SuperAdminAnalysisController", [
             },
             tooltip: {
               mode: 'index',
-              intersect: false
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) label += ': ';
+                  return label + Math.round(context.raw);
+                }
+              }
             }
           },
           scales: {
@@ -624,6 +644,12 @@ myApp.controller("SuperAdminAnalysisController", [
               title: {
                 display: true,
                 text: 'Number of New Users'
+              },
+              ticks: {
+                precision: 0,
+                callback: function(value) {
+                  return Math.round(value);
+                }
               }
             },
             x: {

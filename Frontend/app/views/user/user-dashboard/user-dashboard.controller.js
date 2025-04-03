@@ -28,11 +28,12 @@ myApp.controller("UserController", [
     
     // Sort options
     $scope.sortOptions = [
-      { value: "basePrice", label: "Price: Low to High" },
+      { value: "", label: "Sort" },
+      { value: "basePrice", label: "Price: High to Low" },
       { value: "carName", label: "Name (A-Z)" },
       { value: "travelled", label: "Kilometers Travelled" },
     ];
-    $scope.sortOption = "basePrice"; // Default sort option
+    $scope.sortOption = "";
     
     // Data states
     $scope.fuelTypes = [];

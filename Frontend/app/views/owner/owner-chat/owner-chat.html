@@ -40,22 +40,13 @@
               </div>
               <div class="media-body">
                 <div class="row">
-                  <div class="col-xs-8">
+                  <div class="col-xs-10">
                     <h5 class="media-heading" style="margin-bottom: 2px; font-weight: 600;">
                       {{ chat.user.name }}
-                      <small class="label label-info" style="font-size: 10px; vertical-align: top;">
+                      <small class="label label-info" style="font-size: 10px;">
                         {{ chat.user.email }}
                       </small>
                     </h5>
-                    <p class="small text-muted" style="margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%;">
-                      <span ng-if="chat.lastMessage.length > 40">{{ chat.lastMessage.substring(0, 40) }}...</span>
-                      <span ng-if="chat.lastMessage.length <= 40">{{ chat.lastMessage }}</span>
-                    </p>
-                  </div>
-                  <div class="col-xs-4 text-right">
-                    <small class="text-muted" style="font-size: 11px;">
-                      {{ isToday(chat.lastMessageTime) ? (chat.lastMessageTime | date:'h:mm a') : (chat.lastMessageTime | date:'MMM d') }}
-                    </small>
                   </div>
                 </div>
                 <div class="row" style="margin-top: 5px;">

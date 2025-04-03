@@ -19,10 +19,6 @@ myApp.controller("ownerChatController", [
     $scope.isLoading = false;
     let socket;
 
-    // Owner authentication
-    const ownerData = JSON.parse(sessionStorage.getItem('loginData') || '{}');
-    $scope.ownerId = ownerData.id || ownerData.email;
-
     // Image upload state
     $scope.imageToUpload = null;
     $scope.imagePreviewUrl = null;

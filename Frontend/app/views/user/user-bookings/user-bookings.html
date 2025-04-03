@@ -209,6 +209,37 @@
           </div>
         </div>
       </div>
+       <!-- Invoice for paid bookings -->
+       <div
+       class="panel panel-success"
+       ng-if="booking.paymentStatus==='paid'"
+     >
+       <div class="panel-heading">
+         <h3 class="panel-title">
+           <i class="fa fa-file-text"></i> Payment Information
+         </h3>
+       </div>
+       <div class="panel-body">
+         <div class="row">
+           <div class="col-sm-6">
+             <dl class="dl-horizontal">
+               <dt>Payment Status:</dt>
+               <dd><span class="label label-success">Paid</span></dd>
+               <dt>Amount Paid:</dt>
+               <dd>{{ booking.totalAmount | currency:"₹" }}</dd>
+             </dl>
+           </div>
+           <div class="col-sm-6 text-right">
+             <button
+               class="btn btn-primary"
+               ng-click="getInvoice(booking)"
+             >
+               <i class="fa fa-file-pdf-o"></i> Download Invoice
+             </button>
+           </div>
+         </div>
+       </div>
+     </div>
       </div>
     </uib-accordion>
   </div>

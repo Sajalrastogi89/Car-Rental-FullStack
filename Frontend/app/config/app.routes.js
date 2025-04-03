@@ -183,7 +183,7 @@ myApp.config([
       })
       .state("admin", {
         url: "/super-admin",
-        templateUrl: "app/views/super-admin/super-admin-analysis/super-admin-analysis.html",
+        templateUrl: "app/views/super-admin/admin-panel/admin-panel.html",
         controller: "SuperAdminAnalysisController",
         resolve: {
           auth: [

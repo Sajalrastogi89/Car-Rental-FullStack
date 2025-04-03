@@ -12,7 +12,6 @@ myApp.controller("carController", [
   "CarService",
   "BiddingService",
   "$state",
-  "CarFactory",
   "BidFactory",
   function (
     $stateParams,
@@ -24,7 +23,6 @@ myApp.controller("carController", [
     CarService,
     BiddingService,
     $state,
-    CarFactory,
     BidFactory
   ) {
     // ==========================================
