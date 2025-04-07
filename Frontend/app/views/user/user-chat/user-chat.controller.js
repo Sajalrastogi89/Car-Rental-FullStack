@@ -261,6 +261,11 @@ myApp.controller("userChatController", [
       return validTypes.includes(file.type);
     }
 
+     // Toggle chat list visibility for mobile
+     $scope.toggleChatList = function() {
+      $scope.isChatListVisible = !$scope.isChatListVisible;
+    };
+
     // Initialize controller
     $scope.init();
   }

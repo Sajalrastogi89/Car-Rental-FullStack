@@ -83,6 +83,7 @@ const carSchema = new mongoose.Schema({
   },
   finePercentage:{
     type: Number,
+    default: 50,
     min:0
   },
   numberPlate:{

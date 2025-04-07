@@ -35,6 +35,12 @@ myApp.controller("ownerBiddingController", [
      */
     $scope.selectedFilter = ""; // Default no status filter
 
+    /**
+     * @type {boolean}
+     * @description Controls the visibility of filter panel on mobile
+     */
+    $scope.isFilterVisible = false;
+
     // Pagination states
     $scope.totalItems = 0;
     $scope.currentPage = 1;

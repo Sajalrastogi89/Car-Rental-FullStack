@@ -7,8 +7,7 @@
 const express = require('express');
 const { 
   getAllBookings, 
-  updateBooking, 
-  getInvoice, 
+  updateBooking,
   getBookedDates, 
   getBookingsByCarId,  
 } = require('../controllers/booking.controller');
@@ -38,14 +37,6 @@ router.get('/getAllBookings', authenticateJWT, getAllBookings);
  */
 router.patch('/updateBooking/:id', authenticateJWT, authorizeRoles("owner"), updateBooking);
 
-/**
- * @description Route to generate and retrieve booking invoice
- * @route GET /api/booking/invoice/:id
- * @param {string} id - Booking ID to generate invoice for
- * @middleware authenticateJWT - Verifies user authentication token
- * @access Private
- */
-router.get('/invoice/:id', authenticateJWT, getInvoice);
 
 /**
  * @description Route to get dates that are already booked for a car

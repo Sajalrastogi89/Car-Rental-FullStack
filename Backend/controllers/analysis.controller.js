@@ -4,7 +4,6 @@
  */
 
 // Import required dependencies
-const mongoose = require("mongoose");
 const Booking = require("../models/booking.model");
 const User = require("../models/user.model");
 const Car = require("../models/car.model");
@@ -38,186 +37,297 @@ let getOwnerAnalytics = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Run all aggregations in parallel for better performance
+    // Execute all pipelines concurrently
     const [
-      topCategories,
-      topEarningCities,
-      topTravelledCities,
-      topTravelledCategories,
-      topBookedCars,
-      bookingTrend,
-    ] = await Promise.all([
-      // Total revenue per car category (top 5)
+      topCategoriesResult,
+      topEarningCitiesResult,
+      topTravelledCitiesResult,
+      topTravelledCategoriesResult,
+      topBookedCarsResult,
+      bookingTrendResult,
+      tripTypeAnalysisResult,
+      lateReturnsAnalysisResult,
+      mileageAnalysisResult,
+      biddingAnalysisResult
+    ] = await Promise.allSettled([
+      // Top Categories Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
-            paymentStatus: "paid",
             startDate: { $gte: start, $lte: end },
-          },
+            paymentStatus: "paid" 
+          } 
         },
-        {
-          $project: {
-            car: 1,
-            totalAmount: 1,
-          },
-        },
+        { $project: { "car.category": 1, totalAmount: 1 } },
         { $group: { _id: "$car.category", revenue: { $sum: "$totalAmount" } } },
         { $sort: { revenue: -1 } },
         { $limit: 5 },
-        {
-          $group: {
-            _id: null,
-            labels: { $push: "$_id" },
-            values: { $push: "$revenue" },
-          },
-        },
+        { $group: { _id: null, labels: { $push: "$_id" }, values: { $push: "$revenue" } } }
       ]),
 
-      // Top 5 highest earning cities
+      // Top Earning Cities Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
-            paymentStatus: "paid",
             startDate: { $gte: start, $lte: end },
-          },
+            paymentStatus: "paid" 
+          } 
         },
+        { $project: { "car.city": 1, totalAmount: 1 } },
         { $group: { _id: "$car.city", revenue: { $sum: "$totalAmount" } } },
         { $sort: { revenue: -1 } },
         { $limit: 5 },
-        {
-          $group: {
-            _id: null,
-            labels: { $push: "$_id" },
-            values: { $push: "$revenue" },
-          },
-        },
+        { $group: { _id: null, labels: { $push: "$_id" }, values: { $push: "$revenue" } } }
       ]),
 
-      // Top 5 highest travelled cities (by distance)
+      // Top Travelled Cities Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
-            paymentStatus: "paid",
             startDate: { $gte: start, $lte: end },
-          },
+            paymentStatus: "paid" 
+          } 
         },
-        {
-          $group: {
-            _id: "$car.city",
-            distance: { $sum: "$distanceTravelled" },
-          },
-        },
+        { $project: { "car.city": 1, distanceTravelled: 1 } },
+        { $group: { _id: "$car.city", distance: { $sum: "$distanceTravelled" } } },
         { $sort: { distance: -1 } },
         { $limit: 5 },
-        {
-          $group: {
-            _id: null,
-            labels: { $push: "$_id" },
-            values: { $push: "$distance" },
-          },
-        },
+        { $group: { _id: null, labels: { $push: "$_id" }, values: { $push: "$distance" } } }
       ]),
 
-      // Distance travelled with respect to car category
+      // Top Travelled Categories Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
-            paymentStatus: "paid",
             startDate: { $gte: start, $lte: end },
-          },
+            paymentStatus: "paid" 
+          } 
         },
-        {
-          $group: {
-            _id: "$car.category",
-            distance: { $sum: "$distanceTravelled" },
-          },
-        },
+        { $project: { "car.category": 1, distanceTravelled: 1 } },
+        { $group: { _id: "$car.category", distance: { $sum: "$distanceTravelled" } } },
         { $sort: { distance: -1 } },
         { $limit: 5 },
+        { $group: { _id: null, labels: { $push: "$_id" }, values: { $push: "$distance" } } }
+      ]),
+
+      // Top Booked Cars Pipeline
+      Booking.aggregate([
+        { 
+          $match: { 
+            "owner._id": ownerId,
+            startDate: { $gte: start, $lte: end }
+          } 
+        },
+        { $project: { "car._id": 1, "car.carName": 1 } },
+        { $group: { _id: "$car._id", count: { $sum: 1 }, name: { $first: "$car.carName" } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+        { $group: { _id: null, labels: { $push: "$name" }, values: { $push: "$count" } } }
+      ]),
+
+      // Booking Trend Pipeline
+      Booking.aggregate([
+        { 
+          $match: { 
+            "owner._id": ownerId,
+            startDate: { $gte: start, $lte: end }
+          } 
+        },
+        { $project: { startDate: 1 } },
+        { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$startDate" } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+        { $group: { _id: null, labels: { $push: "$_id" }, values: { $push: "$count" } } }
+      ]),
+
+      // Trip Type Analysis Pipeline
+      Booking.aggregate([
+        { 
+          $match: { 
+            "owner._id": ownerId,
+            startDate: { $gte: start, $lte: end },
+            paymentStatus: "paid" 
+          } 
+        },
+        {
+          $group: {
+            _id: "$tripType",
+            totalBookings: { $sum: 1 },
+            avgRevenue: { $avg: "$totalAmount" },
+            totalRevenue: { $sum: "$totalAmount" },
+            avgDistance: { $avg: "$distanceTravelled" },
+            avgBidAmount: { $avg: "$bidAmount" }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            tripType: "$_id",
+            metrics: {
+              totalBookings: "$totalBookings",
+              avgRevenue: { $round: ["$avgRevenue", 2] },
+              totalRevenue: "$totalRevenue",
+              avgDistance: { $round: ["$avgDistance", 2] },
+              avgBidAmount: { $round: ["$avgBidAmount", 2] }
+            }
+          }
+        }
+      ]),
+
+      // Late Returns Analysis Pipeline
+      Booking.aggregate([
+        { 
+          $match: { 
+            "owner._id": ownerId,
+            startDate: { $gte: start, $lte: end },
+            lateDays: { $gt: 0 }, 
+            paymentStatus: "paid" 
+          } 
+        },
         {
           $group: {
             _id: null,
-            labels: { $push: "$_id" },
-            values: { $push: "$distance" },
-          },
+            totalLateReturns: { $sum: 1 },
+            avgLateDays: { $avg: "$lateDays" },
+            totalLateFees: { $sum: "$lateFee" },
+            maxLateDays: { $max: "$lateDays" }
+          }
         },
+        {
+          $project: {
+            _id: 0,
+            totalLateReturns: 1,
+            avgLateDays: { $round: ["$avgLateDays", 1] },
+            totalLateFees: 1,
+            maxLateDays: 1
+          }
+        }
       ]),
 
-      // Top 5 most booked cars
+      // Mileage Analysis Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
             startDate: { $gte: start, $lte: end },
-          },
+            paymentStatus: "paid" 
+          } 
         },
         {
           $group: {
             _id: "$car._id",
-            count: { $sum: 1 },
-            name: { $first: "$car.carName" },
-          },
+            carName: { $first: "$car.carName" },
+            totalTrips: { $sum: 1 },
+            totalDistance: { $sum: { $subtract: ["$endOdometer", "$startOdometer"] } },
+            avgTripDistance: { $avg: { $subtract: ["$endOdometer", "$startOdometer"] } },
+            maxTripDistance: { $max: { $subtract: ["$endOdometer", "$startOdometer"] } }
+          }
         },
-        { $sort: { count: -1 } },
-        { $limit: 5 },
         {
-          $group: {
-            _id: null,
-            labels: { $push: "$name" },
-            values: { $push: "$count" },
-          },
+          $project: {
+            _id: 0,
+            carName: 1,
+            metrics: {
+              totalTrips: "$totalTrips",
+              totalDistance: "$totalDistance",
+              avgTripDistance: { $round: ["$avgTripDistance", 2] },
+              maxTripDistance: "$maxTripDistance"
+            }
+          }
         },
+        { $sort: { "metrics.totalDistance": -1 } }
       ]),
 
-      // Booking trend over time (by date)
+      // Bidding Analysis Pipeline
       Booking.aggregate([
-        {
-          $match: {
+        { 
+          $match: { 
             "owner._id": ownerId,
-            startDate: { $gte: start, $lte: end },
-          },
+            startDate: { $gte: start, $lte: end }
+          } 
         },
         {
           $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$startDate" } },
-            count: { $sum: 1 },
-          },
+            _id: {
+              month: { $month: "$startDate" },
+              year: { $year: "$startDate" }
+            },
+            avgBidAmount: { $avg: "$bidAmount" },
+            maxBidAmount: { $max: "$bidAmount" },
+            minBidAmount: { $min: "$bidAmount" },
+            totalBids: { $sum: 1 },
+            successfulBids: {
+              $sum: {
+                $cond: [{ $eq: ["$paymentStatus", "paid"] }, 1, 0]
+              }
+            }
+          }
         },
         {
-          $sort: { _id: 1 },
+          $project: {
+            _id: 0,
+            period: {
+              $concat: [
+                { $toString: "$_id.year" },
+                "-",
+                { $toString: "$_id.month" }
+              ]
+            },
+            metrics: {
+              avgBidAmount: { $round: ["$avgBidAmount", 2] },
+              maxBidAmount: "$maxBidAmount",
+              minBidAmount: "$minBidAmount",
+              totalBids: "$totalBids",
+              successRate: {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$successfulBids", "$totalBids"] },
+                      100
+                    ]
+                  },
+                  1
+                ]
+              }
+            }
+          }
         },
-        {
-          $group: {
-            _id: null,
-            labels: { $push: "$_id" },
-            values: { $push: "$count" },
-          },
-        },
-      ]),
+        { $sort: { period: 1 } }
+      ])
     ]);
+
+    // Extract results with error handling
+    const results = {
+      topCategories: topCategoriesResult.status === 'fulfilled' ? topCategoriesResult.value[0] : null,
+      topEarningCities: topEarningCitiesResult.status === 'fulfilled' ? topEarningCitiesResult.value[0] : null,
+      topTravelledCities: topTravelledCitiesResult.status === 'fulfilled' ? topTravelledCitiesResult.value[0] : null,
+      topTravelledCategories: topTravelledCategoriesResult.status === 'fulfilled' ? topTravelledCategoriesResult.value[0] : null,
+      topBookedCars: topBookedCarsResult.status === 'fulfilled' ? topBookedCarsResult.value[0] : null,
+      bookingTrend: bookingTrendResult.status === 'fulfilled' ? bookingTrendResult.value[0] : null,
+      tripTypeAnalysis: tripTypeAnalysisResult.status === 'fulfilled' ? tripTypeAnalysisResult.value : [],
+      lateReturnsAnalysis: lateReturnsAnalysisResult.status === 'fulfilled' ? lateReturnsAnalysisResult.value[0] : {
+        totalLateReturns: 0,
+        avgLateDays: 0,
+        totalLateFees: 0,
+        maxLateDays: 0
+      },
+      mileageAnalysis: mileageAnalysisResult.status === 'fulfilled' ? mileageAnalysisResult.value : [],
+      biddingAnalysis: biddingAnalysisResult.status === 'fulfilled' ? biddingAnalysisResult.value : []
+    };
 
     // Return consolidated analytics data
     return res.status(200).json({
       success: true,
-      data: {
-        topCategories,
-        topEarningCities,
-        topTravelledCities,
-        topTravelledCategories,
-        topBookedCars,
-        bookingTrend,
-      },
+      data: results
     });
   } catch (error) {
-    // Handle errors
     return res.status(500).json({
       success: false,
       message: "Error fetching analytics data",
-      error: error.message,
+      error: error.message
     });
   }
 };
@@ -258,7 +368,7 @@ const getAdminAnalytics = async (req, res) => {
       categoryDistribution,
       cityDistribution,
       userGrowth,
-    ] = await Promise.all([
+    ] = await Promise.allSettled([
       // Platform revenue summary metrics
       Booking.aggregate([
         {
@@ -443,7 +553,7 @@ const getAdminAnalytics = async (req, res) => {
               $sum: { $cond: [{ $eq: ["$role", "owner"] }, 1, 0] },
             },
             renters: {
-              $sum: { $cond: [{ $eq: ["$role", "renter"] }, 1, 0] },
+              $sum: { $cond: [{ $eq: ["$role", "user"] }, 1, 0] },
             },
           },
         },
@@ -478,42 +588,17 @@ const getAdminAnalytics = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        revenueSummary: revenueSummary[0] || {
-          totalRevenue: 0,
-          avgBookingValue: 0,
-          totalBookings: 0,
-          totalDistance: 0,
-        },
-        topOwners: topOwners[0] || {
-          labels: [],
-          values: [],
-          bookingCounts: [],
-        },
-        topRenters: topRenters[0] || {
-          labels: [],
-          values: [],
-          bookingCounts: [],
-        },
-        bookingsByStatus: bookingsByStatus[0] || { labels: [], values: [] },
-        bookingTrend: bookingTrend[0] || {
-          labels: [],
-          bookingValues: [],
-          revenueValues: [],
-        },
-        categoryDistribution: categoryDistribution[0] || {
-          labels: [],
-          values: [],
-        },
-        cityDistribution: cityDistribution[0] || { labels: [], values: [] },
-        userGrowth: userGrowth[0] || {
-          labels: [],
-          totalUsers: [],
-          ownerCounts: [],
-          renterCounts: [],
-        },
+        revenueSummary: revenueSummary.status === 'fulfilled' ? revenueSummary.value[0] : null,
+        topOwners: topOwners.status === 'fulfilled' ? topOwners.value[0] : null,
+        topRenters: topRenters.status === 'fulfilled' ? topRenters.value[0] : null,
+        bookingsByStatus: bookingsByStatus.status === 'fulfilled' ? bookingsByStatus.value[0] : null,
+        bookingTrend: bookingTrend.status === 'fulfilled' ? bookingTrend.value[0] : null,
+        categoryDistribution: categoryDistribution.status === 'fulfilled' ? categoryDistribution.value[0] : null,
+        cityDistribution: cityDistribution.status === 'fulfilled' ? cityDistribution.value[0] : null,
+        userGrowth: userGrowth.status === 'fulfilled' ? userGrowth.value[0] : null,
         platformMetrics: {
           totalOwners: userCounts.find((u) => u._id === "owner")?.count || 0,
-          totalRenters: userCounts.find((u) => u._id === "renter")?.count || 0,
+          totalRenters: userCounts.find((u) => u._id === "user")?.count || 0,
           totalCars,
           avgCarsPerOwner: parseFloat(avgCarsPerOwner.toFixed(2)),
         },
@@ -541,9 +626,9 @@ const getAdminAnalytics = async (req, res) => {
 const bookingCountAnalysis = async (req, res) => {
   try {
     const owner_id = req.user._id;
-    
-    // Aggregate bookings by payment status
-    const bookingCount = await Booking.aggregate([
+
+    // Simple aggregation pipeline without $facet
+    const analytics = await Booking.aggregate([
       {
         $match: {
           "owner._id": owner_id,
@@ -556,15 +641,19 @@ const bookingCountAnalysis = async (req, res) => {
           count: { $sum: 1 },
         },
       },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
     ]);
 
-    // Return the aggregated data
+    // Return the aggregated data directly
     return res.status(200).json({
       success: true,
-      data: bookingCount,
+      data: analytics,
     });
   } catch (error) {
-    // Handle errors
     return res.status(500).json({
       success: false,
       message: "Error fetching analytics data",
@@ -574,8 +663,8 @@ const bookingCountAnalysis = async (req, res) => {
 };
 
 // Export controller functions
-module.exports = { 
-  getOwnerAnalytics, 
-  getAdminAnalytics, 
-  bookingCountAnalysis 
+module.exports = {
+  getOwnerAnalytics,
+  getAdminAnalytics,
+  bookingCountAnalysis,
 };

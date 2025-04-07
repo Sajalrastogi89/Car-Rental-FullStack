@@ -16,11 +16,7 @@ myApp.controller("SuperAdminAnalysisController", [
       endDate: new Date()
     };
     
-    // Logout function
-    $scope.logout = function() {
-      AuthService.logout();
-      $state.go('auth');
-    };
+    
     
     $scope.startDateOpened = false;
     $scope.endDateOpened = false;
@@ -100,7 +96,6 @@ myApp.controller("SuperAdminAnalysisController", [
         .then(response => {
           if (response.data.success) {
             $scope.analytics = response.data.data;
-            console.log("analytics", $scope.analytics);
             $scope.renderCharts();
           } else {
             $scope.error = "Failed to load analytics data.";
@@ -668,6 +663,11 @@ myApp.controller("SuperAdminAnalysisController", [
       });
     }
     
+    // Logout function
+    $scope.logout = function() {
+      AuthService.logout();
+      $state.go('auth');
+    };
  
   }
 ]);

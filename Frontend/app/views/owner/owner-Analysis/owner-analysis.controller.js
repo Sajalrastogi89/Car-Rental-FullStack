@@ -62,6 +62,7 @@ myApp.controller("OwnerAnalysisController", [
         .then(response => {
           if (response.data.success) {
             $scope.analytics = response.data.data;
+            $scope.processAnalyticsData();
             $scope.renderCharts();
           } else {
             $scope.error = "Failed to load analytics data.";
@@ -73,6 +74,36 @@ myApp.controller("OwnerAnalysisController", [
         .finally(() => {
           $scope.isLoading = false;
         });
+    };
+
+    /**
+     * @description Process analytics data for visualization
+     */
+    $scope.processAnalyticsData = function() {
+      // Process Trip Type Analysis
+      if ($scope.analytics.tripTypeAnalysis) {
+        $scope.tripTypeChartData = {
+          labels: $scope.analytics.tripTypeAnalysis.map(item => item.tripType),
+          values: $scope.analytics.tripTypeAnalysis.map(item => item.metrics.totalRevenue),
+          bookings: $scope.analytics.tripTypeAnalysis.map(item => item.metrics.totalBookings),
+          avgRevenue: $scope.analytics.tripTypeAnalysis.map(item => item.metrics.avgRevenue),
+          avgDistance: $scope.analytics.tripTypeAnalysis.map(item => item.metrics.avgDistance)
+        };
+      }
+
+      // Process Mileage Analysis
+      if ($scope.analytics.mileageAnalysis) {
+        $scope.mileageChartData = {
+          labels: $scope.analytics.mileageAnalysis.map(item => item.carName),
+          totalDistance: $scope.analytics.mileageAnalysis.map(item => item.metrics.totalDistance || 0),
+          avgDistance: $scope.analytics.mileageAnalysis.map(item => item.metrics.avgDistance || 0)
+        };
+      }
+
+      // Process Bidding Analysis
+      if ($scope.analytics.biddingAnalysis && $scope.analytics.biddingAnalysis.length > 0) {
+        $scope.biddingMetrics = $scope.analytics.biddingAnalysis[0].metrics;
+      }
     };
 
     /**
@@ -99,68 +130,132 @@ myApp.controller("OwnerAnalysisController", [
       if (!$scope.analytics) return;
 
       $timeout(function() {
-        // Revenue Charts
-        if ($scope.analytics.topCategories?.length > 0) {
+        // Remove old chart instances first
+        if (window.chartInstances) {
+          Object.keys(window.chartInstances).forEach(key => {
+            window.chartInstances[key].destroy();
+            delete window.chartInstances[key];
+          });
+        }
+
+        // Top Categories Chart
+        if ($scope.analytics.topCategories?.labels?.length > 0) {
           $scope.renderChart(
-            "topCategories",
-            $scope.analytics.topCategories[0].labels,
-            $scope.analytics.topCategories[0].values,
-            "bar",
-            "Top Revenue Categories"
+            'topCategories',
+            $scope.analytics.topCategories.labels,
+            [{
+              label: 'Revenue by Category',
+              data: $scope.analytics.topCategories.values,
+              type: 'bar'
+            }],
+            'bar',
+            'Top Revenue Categories'
           );
         }
-        
-        if ($scope.analytics.topEarningCities?.length > 0) {
+
+        // Top Earning Cities Chart
+        if ($scope.analytics.topEarningCities?.labels?.length > 0) {
           $scope.renderChart(
-            "topEarningCities",
-            $scope.analytics.topEarningCities[0].labels,
-            $scope.analytics.topEarningCities[0].values,
-            "pie",
-            "Top Earning Cities"
+            'topEarningCities',
+            $scope.analytics.topEarningCities.labels,
+            [{
+              data: $scope.analytics.topEarningCities.values
+            }],
+            'pie',
+            'Top Earning Cities'
           );
         }
-        
-        // Usage Charts
-        if ($scope.analytics.topTravelledCities?.length > 0) {
+
+        // Top Travelled Cities Chart
+        if ($scope.analytics.topTravelledCities?.labels?.length > 0) {
           $scope.renderChart(
-            "topTravelledCities",
-            $scope.analytics.topTravelledCities[0].labels,
-            $scope.analytics.topTravelledCities[0].values,
-            "pie",
-            "Most Travelled Cities (km)"
+            'topTravelledCities',
+            $scope.analytics.topTravelledCities.labels,
+            [{
+              data: $scope.analytics.topTravelledCities.values
+            }],
+            'pie',
+            'Most Travelled Cities (km)'
           );
         }
-        
-        if ($scope.analytics.topTravelledCategories?.length > 0) {
+
+        // Top Travelled Categories Chart
+        if ($scope.analytics.topTravelledCategories?.labels?.length > 0) {
           $scope.renderChart(
-            "topTravelledCategories",
-            $scope.analytics.topTravelledCategories[0].labels,
-            $scope.analytics.topTravelledCategories[0].values,
-            "bar",
-            "Distance Travelled by Car Category (km)"
+            'topTravelledCategories',
+            $scope.analytics.topTravelledCategories.labels,
+            [{
+              label: 'Distance by Category',
+              data: $scope.analytics.topTravelledCategories.values
+            }],
+            'bar',
+            'Distance Travelled by Category (km)'
           );
         }
-        
-        // Booking Charts
-        if ($scope.analytics.topBookedCars?.length > 0) {
+
+        // Top Booked Cars Chart
+        if ($scope.analytics.topBookedCars?.labels?.length > 0) {
           $scope.renderChart(
-            "topBookedCars",
-            $scope.analytics.topBookedCars[0].labels,
-            $scope.analytics.topBookedCars[0].values,
-            "bar",
-            "Most Booked Cars"
+            'topBookedCars',
+            $scope.analytics.topBookedCars.labels,
+            [{
+              label: 'Number of Bookings',
+              data: $scope.analytics.topBookedCars.values
+            }],
+            'bar',
+            'Most Booked Cars'
           );
         }
-        
-        if ($scope.analytics.bookingTrend?.length > 0) {
+
+        // Booking Trend Chart
+        if ($scope.analytics.bookingTrend?.labels?.length > 0) {
           $scope.renderChart(
-            "bookingTrend",
-            $scope.analytics.bookingTrend[0].labels,
-            $scope.analytics.bookingTrend[0].values,
-            "line",
-            "Booking Trend"
+            'bookingTrend',
+            $scope.analytics.bookingTrend.labels,
+            [{
+              label: 'Bookings Over Time',
+              data: $scope.analytics.bookingTrend.values,
+              tension: 0.4
+            }],
+            'line',
+            'Booking Trend'
           );
         }
+
+        // Trip Type Analysis Chart
+        if ($scope.analytics.tripTypeAnalysis && $scope.analytics.tripTypeAnalysis.length > 0) {
+          const tripTypeLabels = $scope.analytics.tripTypeAnalysis.map(item => item.tripType);
+          const tripTypeRevenue = $scope.analytics.tripTypeAnalysis.map(item => item.metrics.totalRevenue);
+          const tripTypeBookings = $scope.analytics.tripTypeAnalysis.map(item => item.metrics.totalBookings);
+          
+          $scope.renderChart(
+            'tripTypeChart',
+            tripTypeLabels,
+            [
+              {
+                label: 'Total Revenue',
+                data: tripTypeRevenue,
+                type: 'bar',
+                yAxisID: 'y1'
+              },
+              {
+                label: 'Total Bookings',
+                data: tripTypeBookings,
+                type: 'line',
+                yAxisID: 'y2'
+              }
+            ],
+            'mixed',
+            'Trip Type Analysis'
+          );
+        }
+
+        // Mileage Analysis Chart
+        if ($scope.analytics.mileageAnalysis && $scope.analytics.mileageAnalysis.length > 0) {
+          renderMileageChart($scope.analytics.mileageAnalysis);
+        }
+
+      
       }, 0);
     };
 
@@ -201,11 +296,11 @@ myApp.controller("OwnerAnalysisController", [
      * @description Render a single chart with the specified configuration
      * @param {string} elementId - The DOM element ID for the chart
      * @param {Array} labels - Chart labels
-     * @param {Array} values - Chart values
-     * @param {string} chartType - Type of chart (bar, pie, line)
+     * @param {Array} datasets - Chart datasets
+     * @param {string} chartType - Type of chart (bar, pie, line, mixed)
      * @param {string} chartTitle - Title of the chart
      */
-    $scope.renderChart = function(elementId, labels, values, chartType, chartTitle) {
+    $scope.renderChart = function(elementId, labels, datasets, chartType, chartTitle) {
       let ctx = document.getElementById(elementId);
       
       if (!ctx) {
@@ -214,45 +309,52 @@ myApp.controller("OwnerAnalysisController", [
       }
       
       ctx = ctx.getContext("2d");
-      
-      // Select color palette based on chart type
-      let colors = chartType === 'pie' ? pieColors : barColors;
-      
-      // Extend colors array if needed
-      if (labels.length > colors.length) {
-        colors = Array(Math.ceil(labels.length / colors.length))
-          .fill(colors)
-          .flat()
-          .slice(0, labels.length);
-      }
 
+      // Configure scales based on chart type
+      let scales = {};
+      if (chartType === 'mixed') {
+        scales = {
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Revenue (₹)'
+            }
+          },
+        };
+      } 
+      
       // Configure chart data
       let chartData = {
         labels: labels,
-        datasets: [{
-          label: chartTitle,
-          data: values,
-          backgroundColor: chartType === 'line' ? 'rgba(75, 192, 192, 0.2)' : colors,
-          borderColor: chartType === 'line' ? 'rgba(75, 192, 192, 1)' : colors,
+        datasets: datasets.map((dataset, index) => ({
+          ...dataset,
+          backgroundColor: chartType === 'pie' ? 
+            pieColors : 
+            dataset.type === 'line' ? 
+              'rgba(75, 192, 192, 0.2)' : 
+              barColors[index % barColors.length],
+          borderColor: chartType === 'pie' ? 
+            pieColors : 
+            dataset.type === 'line' ? 
+              'rgba(75, 192, 192, 1)' : 
+              barColors[index % barColors.length],
           borderWidth: 1,
-          tension: chartType === 'line' ? 0.1 : 0,
-          fill: chartType === 'line'
-        }]
+          fill: dataset.type === 'line'
+        }))
       };
 
       // Configure chart options
       let chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            display: chartType !== 'pie',
-          }
-        },
+        scales: scales,
         plugins: {
           legend: {
-            display: chartType === 'pie',
+            display: chartType === 'pie' || chartType === 'mixed' || datasets.length > 1,
             position: 'top',
           },
           title: {
@@ -260,29 +362,6 @@ myApp.controller("OwnerAnalysisController", [
             text: chartTitle,
             font: {
               size: 16
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                let label = context.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                
-                let value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
-                
-                // Format value based on chart type
-                if (elementId === 'topEarningCities' || elementId === 'topCategories') {
-                  label += '₹' + value.toLocaleString();
-                } else if (elementId === 'topTravelledCities' || elementId === 'topTravelledCategories') {
-                  label += value.toLocaleString() + ' km';
-                } else {
-                  label += value;
-                }
-                
-                return label;
-              }
             }
           }
         }
@@ -296,13 +375,105 @@ myApp.controller("OwnerAnalysisController", [
       // Create and store new chart instance
       if (!window.chartInstances) window.chartInstances = {};
       window.chartInstances[elementId] = new Chart(ctx, {
-        type: chartType,
+        type: chartType === 'mixed' ? 'bar' : chartType,
         data: chartData,
-        options: chartOptions,
+        options: chartOptions
       });
     };
 
-    // Initialize controller
-    $scope.init();
+    /**
+     * @description Get CSS class based on value for visual indicators
+     * @param {number} value - The value to check
+     * @param {string} type - The type of value being checked
+     * @returns {string} CSS class name
+     */
+    $scope.getStatusClass = function(value, type) {
+      switch(type) {
+        case 'successRate':
+          return value >= 70 ? 'text-success' : 
+                 value >= 40 ? 'text-warning' : 'text-danger';
+        case 'lateReturns':
+          return value === 0 ? 'text-success' : 
+                 value <= 5 ? 'text-warning' : 'text-danger';
+        default:
+          return '';
+      }
+    };
+
+    /**
+     * @description Format currency values
+     * @param {number} value - The value to format
+     * @returns {string} Formatted currency string
+     */
+    $scope.formatCurrency = function(value) {
+      return value ? `₹${value.toFixed(2)}` : '₹0.00';
+    };
+
+    /**
+     * @description Format percentage values
+     * @param {number} value - The value to format
+     * @returns {string} Formatted percentage string
+     */
+    $scope.formatPercentage = function(value) {
+      return value ? `${value.toFixed(1)}%` : '0%';
+    };
+
+ 
+
+    function renderMileageChart(data) {
+      const ctx = document.getElementById('mileageChart');
+      if (!ctx) return;
+
+      // Properly check and destroy existing chart
+      if (window.mileageChart && typeof window.mileageChart.destroy === 'function') {
+        window.mileageChart.destroy();
+      }
+
+      const labels = data.map(item => item.carName);
+      const totalDistance = data.map(item => item.metrics.totalDistance);
+      const avgTripDistance = data.map(item => item.metrics.avgTripDistance);
+
+      window.mileageChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total Distance (km)',
+              data: totalDistance,
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Average Trip Distance (km)',
+              data: avgTripDistance,
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Distance (km)'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Vehicle Mileage Analysis'
+            }
+          }
+        }
+      });
+    }
   }
 ]);

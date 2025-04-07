@@ -25,6 +25,12 @@ const carValidationRules = [
     .custom((value) => value >= 0)
     .withMessage("Travelled distance must be at least 0"),
   body("city").trim().notEmpty().withMessage("City is required"),
+  body("finePercentage")
+    .optional()
+    .isNumeric()
+    .withMessage("Fine percentage must be a number")
+    .custom((value) => value >= 0)
+    .withMessage("Fine percentage must be at least 0"),
   body("features")
   .trim().notEmpty()
     .withMessage("Selected features are required")

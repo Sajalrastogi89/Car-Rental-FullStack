@@ -60,10 +60,10 @@ myApp.component("bookingDetailsModal", {
               <div class="col-md-4">
                 <h5><i class="fa fa-money text-muted"></i> Payment</h5>
                 <h4 class="text-success" style="margin-top: 5px; margin-bottom: 10px;" ng-show="bid.totalAmount">
-                  <i class="fa fa-inr"></i> {{bid.totalAmount | currency:"₹"}}
+                   {{bid.totalAmount | currency:"₹"}}
                 </h4>
                 <h4 class="text-danger" style="margin-top: 5px; margin-bottom: 10px;" ng-hide="bid.totalAmount">
-                  <i class="fa fa-inr"></i> {{"In Progress"}}
+                   {{"In Progress"}}
                 </h4>
                 <p style="margin-bottom: 0;">
                   <span class="label" ng-class="{

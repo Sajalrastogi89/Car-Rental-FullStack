@@ -46,6 +46,7 @@ myApp.controller("carController", [
      * @description Tracks if the date picker has been initialized
      */
     $scope.flatpickrInitialized = false;
+    $scope.disableSubmit = false;
 
     // ==========================================
     // Initialization
@@ -231,6 +232,7 @@ myApp.controller("carController", [
      * Validates dates and bid amount before submission
      */
     $scope.addBid = function() {
+      $scope.disableSubmit = true;
       if (!$scope.car.startDate || !$scope.car.endDate) {
         ToastService.error("Please select both start and end dates", 3000);
         return;
@@ -258,6 +260,7 @@ myApp.controller("carController", [
 
       BiddingService.addBid(bid)
         .then((response) => {
+          $scope.disableSubmit = false;
           // Reset form state
           $scope.carForm.$setPristine();
           $scope.carForm.$setUntouched();
@@ -276,6 +279,7 @@ myApp.controller("carController", [
           ToastService.success("Bid placed successfully!", 3000);
         })
         .catch((error) => {
+          $scope.disableSubmit = false;
           ToastService.error("Failed to place bid. Please try again.", 3000);
         });
     };

@@ -105,7 +105,6 @@ myApp.controller("ownerBookingController", [
      * @param {number} currentPage - The page number to fetch (defaults to 1)
      */
     $scope.getUserBookings = function(currentPage = 1) {
-      console.log("currentPage", currentPage);
       // Build query parameters
       let param = {};
       if ($scope.search) param.carName = $scope.search;
@@ -114,7 +113,6 @@ myApp.controller("ownerBookingController", [
       if ($scope.itemsPerPage) param.limit = $scope.itemsPerPage;
       param.page = currentPage;
 
-      console.log("param", param);
       // Fetch filtered bookings
       BookingService.getAllBookings(param)
         .then((response) => {
@@ -248,78 +246,14 @@ myApp.controller("ownerBookingController", [
      * @param {Object} booking - The booking to generate invoice for
      */
     $scope.getInvoice = function(booking) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const lineGap = 6;
-      let y = 15;
-
-      // Header
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text("Car Rental Invoice", 105, y, { align: "center" });
-      y += 8;
-
-      // Line separator
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(180);
-      doc.line(20, y, 190, y);
-      y += 8;
-
-      // Booking Details
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text("Booking Details", 20, y); y += lineGap;
-      doc.setFont("helvetica", "normal");
-
-      // Add booking information
-      doc.text(`Invoice ID: ${booking._id}`, 20, y); y += lineGap;
-      doc.text(`Payment Status: ${booking.paymentStatus}`, 20, y); y += lineGap;
-      doc.text(`Total Amount: Rs. ${booking.totalAmount}`, 20, y); y += lineGap;
-      doc.text(`Distance Travelled: ${booking.distanceTravelled || 0} km`, 20, y); y += lineGap;
-      doc.text(`Bid Amount: Rs. ${booking.bidAmount}`, 20, y); y += lineGap;
-      doc.text(`Start Date: ${new Date(booking.startDate).toLocaleDateString()}`, 20, y); y += lineGap;
-      doc.text(`End Date: ${new Date(booking.endDate).toLocaleDateString()}`, 20, y); y += lineGap;
-      doc.text(`Duration: ${$scope.calculateDuration(booking.startDate, booking.endDate)} days`, 20, y); y += lineGap;
-      doc.text(`Trip Type: ${booking.tripType === 'outStation' ? 'Outstation' : 'In-City'}`, 20, y); y += lineGap;
-
-      // Section separator
-      y += 3;
-      doc.setDrawColor(220);
-      doc.line(20, y, 190, y);
-      y += 8;
-
-      // Car Details
-      doc.setFont("helvetica", "bold");
-      doc.text("Car Details", 20, y); y += lineGap;
-      doc.setFont("helvetica", "normal");
-
-      // Add car information
-      doc.text(`Name: ${booking.car.carName}`, 20, y); y += lineGap;
-      doc.text(`Category: ${booking.car.category}`, 20, y); y += lineGap;
-      doc.text(`Fuel Type: ${booking.car.fuelType}`, 20, y); y += lineGap;
-      doc.text(`Base Price: Rs. ${booking.car.basePrice}`, 20, y); y += lineGap;
-      doc.text(`Price per KM: Rs. ${booking.car.pricePerKm}`, 20, y); y += lineGap;
-      if (booking.tripType === 'outStation') {
-        doc.text(`Outstation Charges: Rs. ${booking.car.outStationCharges}/day`, 20, y); y += lineGap;
-      }
-
-      // Section separator
-      y += 3;
-      doc.setDrawColor(220);
-      doc.line(20, y, 190, y);
-      y += 8;
-
-      // User Details
-      doc.setFont("helvetica", "bold");
-      doc.text("User Details", 20, y); y += lineGap;
-      doc.setFont("helvetica", "normal");
-
-      // Add user information
-      doc.text(`Name: ${booking.user.name}`, 20, y); y += lineGap;
-      doc.text(`Email: ${booking.user.email}`, 20, y); y += lineGap;
-      doc.text(`Phone: ${booking.user.phone || 'N/A'}`, 20, y); y += lineGap;
-
-      // Save the PDF
+      // Use the PDF Generator utility to create a professional invoice
+      const doc = window.PDFGenerator.generateBookingInvoice(booking, {
+        // You can override default options here if needed
+        companyName: "EZYCAR",
+        includeTerms: true
+      });
+      
+      // Save the generated PDF
       doc.save(`invoice-${booking._id}.pdf`);
     };
 

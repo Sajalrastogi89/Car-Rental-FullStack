@@ -3,7 +3,11 @@
 <div class="container" ng-init="init()">
   <!-- Page Header -->
   <div class="page-header">
-    <h1>Bidding Management <small>Review and manage bids</small></h1>
+    <h1 class="visible-md visible-lg">Bidding Management <small>Review and manage bids</small></h1>
+    <h2 class="visible-xs visible-sm" style="margin-top: 10px; font-size: 24px;">
+      Bidding Management 
+      <small style="font-size: 16px;">Review and manage bids</small>
+    </h2>
   </div>
   
   <!-- Loading State -->
@@ -19,23 +23,32 @@
   <div ng-hide="isLoading">
     <!-- Filters and Controls -->
     <div class="panel panel-default">
-      <div class="panel-body">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fa fa-filter"></i> Filters
+          <!-- Mobile Toggle Button -->
+          <button class="btn btn-link pull-right visible-xs visible-sm" 
+                  ng-click="isFilterVisible = !isFilterVisible"
+                  style="margin: -5px -10px; padding: 5px 10px; color: inherit;">
+            <i class="fa" ng-class="{'fa-chevron-down': !isFilterVisible, 'fa-chevron-up': isFilterVisible}"></i>
+          </button>
+        </h3>
+      </div>
+      <div class="panel-body" ng-class="{'hidden-xs hidden-sm': !isFilterVisible}">
         <div class="row">
           <div class="col-md-4">
             <div class="form-group">
               <label for="search"><i class="fa fa-search"></i> Search Car:</label>
               <div class="input-group">
-                <span class="input-group-addon"
-                  ><i class="fa fa-search"></i
-                ></span>
+                <span class="input-group-addon"><i class="fa fa-search"></i></span>
                 <input
-                id="search"
+                  id="search"
                   type="text"
                   class="form-control"
                   ng-model="search"
                   placeholder="Search Car..."
                   ng-change="getUserBiddings()"
-                ng-model-options="{ debounce: 300 }"
+                  ng-model-options="{ debounce: 300 }"
                 />
               </div>
             </div>
@@ -58,7 +71,6 @@
               </select>
             </div>
           </div>
-  
   
           <!-- Sort Bar -->
           <div class="col-md-4">
@@ -84,7 +96,7 @@
     </div>
     
     <!-- No Bids Message -->
-    <div class="alert alert-info text-center" ng-show="filteredBids.length === 0">
+    <div class="alert alert-info text-center" ng-show="biddings.length === 0">
       <i class="fa fa-info-circle fa-2x"></i>
       <p class="lead">No biddings found matching your criteria</p>
     </div>
@@ -98,7 +110,7 @@
              'panel-success': bid.status === 'accepted',
              'panel-danger': bid.status === 'rejected'
            }"
-           ng-repeat="bid in filteredBids = (biddings)">
+           ng-repeat="bid in biddings">
         <uib-accordion-heading>
           <div class="row">
             <div class="col-xs-7">

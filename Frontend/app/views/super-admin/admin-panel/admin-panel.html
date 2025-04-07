@@ -28,48 +28,70 @@
     <div class="panel-body p-3">
       <div class="panel panel-default shadow-sm mb-0">
         <div class="panel-heading bg-light p-3">
-          <h5 class="panel-title m-0"><i class="fas fa-filter me-2"></i>Custom Date Range</h5>
-        </div>
-        <div class="panel-body p-3">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label for="startDate" class="form-label">Start Date</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                <input type="text" class="form-control" 
-                       uib-datepicker-popup="yyyy-MM-dd" 
-                       ng-model="dateRange.startDate" 
-                       is-open="startDateOpened"
-                       datepicker-options="dateOptions"
-                       close-text="Close"
-                       alt-input-formats="altInputFormats" />
-                <button type="button" class="btn btn-outline-secondary" 
-                        ng-click="openStartDate($event)">
-                  <i class="fas fa-calendar"></i>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <label for="endDate" class="form-label">End Date</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                <input type="text" class="form-control" 
-                       uib-datepicker-popup="yyyy-MM-dd" 
-                       ng-model="dateRange.endDate" 
-                       is-open="endDateOpened"
-                       datepicker-options="dateOptions"
-                       close-text="Close"
-                       alt-input-formats="altInputFormats" />
-                <button type="button" class="btn btn-outline-secondary" 
-                        ng-click="openEndDate($event)">
-                  <i class="fas fa-calendar"></i>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-              <button class="btn btn-primary w-100" ng-click="updateDateRange()">
-                <i class="fas fa-sync-alt me-1"></i> Apply Filter
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="panel-title m-0"><i class="fas fa-filter me-2"></i>Custom Date Range</h5>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setLastMonth()">
+                <i class="far fa-calendar-alt me-1"></i> Last Month
               </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setLastThreeMonths()">
+                <i class="far fa-calendar-alt me-1"></i> Last 3 Months
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setThisYear()">
+                <i class="far fa-calendar-alt me-1"></i> This Year
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body p-4">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="date-range-container">
+                <div class="date-range-inputs">
+                  <div class="date-input-group">
+                    <label>Start Date</label>
+                    <div class="input-wrapper">
+                      <i class="far fa-calendar-alt"></i>
+                      <input type="text" 
+                             class="form-control" 
+                             uib-datepicker-popup="yyyy-MM-dd" 
+                             ng-model="dateRange.startDate" 
+                             is-open="startDateOpened"
+                             datepicker-options="dateOptions"
+                             close-text="Close"
+                             alt-input-formats="altInputFormats" />
+                      <button type="button" class="btn btn-link" ng-click="openStartDate($event)">
+                        <i class="fas fa-chevron-down"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="date-separator">
+                    <span>to</span>
+                  </div>
+                  <div class="date-input-group">
+                    <label>End Date</label>
+                    <div class="input-wrapper">
+                      <i class="far fa-calendar-alt"></i>
+                      <input type="text" 
+                             class="form-control" 
+                             uib-datepicker-popup="yyyy-MM-dd" 
+                             ng-model="dateRange.endDate" 
+                             is-open="endDateOpened"
+                             datepicker-options="dateOptions"
+                             close-text="Close"
+                             alt-input-formats="altInputFormats" />
+                      <button type="button" class="btn btn-link" ng-click="openEndDate($event)">
+                        <i class="fas fa-chevron-down"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="apply-button-container">
+                    <button class="btn btn-primary" ng-click="updateDateRange()">
+                      <i class="fas fa-sync-alt me-2"></i> Apply Filter
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -308,3 +330,103 @@
     </div>
   </div>
 </div>
+
+<style>
+  .date-range-container {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  
+  .date-range-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+  }
+  
+  .date-input-group {
+    flex: 1;
+  }
+  
+  .date-input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 500;
+  }
+  
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+  }
+  
+  .input-wrapper:hover {
+    border-color: #ced4da;
+    background: #fff;
+  }
+  
+  .input-wrapper:focus-within {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+  }
+  
+  .input-wrapper i {
+    color: #6c757d;
+    margin-right: 0.75rem;
+  }
+  
+  .input-wrapper input {
+    border: none;
+    background: transparent;
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  .input-wrapper input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  
+  .input-wrapper .btn-link {
+    color: #6c757d;
+    padding: 0.25rem;
+  }
+  
+  .date-separator {
+    display: flex;
+    align-items: center;
+    padding-bottom: 2rem;
+  }
+  
+  .date-separator span {
+    background: #f8f9fa;
+    padding: 0.5rem 1rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+    border-radius: 4px;
+  }
+  
+  .apply-button {
+    padding-bottom: 2rem;
+  }
+  
+  .apply-button .btn-primary {
+    background: #0d6efd;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .apply-button .btn-primary:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+  }
+</style>

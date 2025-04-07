@@ -36,6 +36,11 @@ const carSubModelSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
+  finePercentage: {
+    type: Number,
+    default: 50,
+    min: 0,
+  },
   travelled: {
     type: Number,
     default: 0,
@@ -73,6 +78,7 @@ const userSubModelSchema = new mongoose.Schema({
     required: true,
     trim: true,
     lowercase: true,
+    unique: true,
   },
   phone: {
     type: String,
@@ -110,7 +116,7 @@ const biddingSchema = new mongoose.Schema(
     },
     tripType: {
       type: String,
-      // required: true,
+      required: true,
     },
     car: carSubModelSchema,
     user: userSubModelSchema,

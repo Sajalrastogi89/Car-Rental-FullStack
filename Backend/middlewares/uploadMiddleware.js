@@ -53,7 +53,6 @@ const optionalUploadSingle = (req, res, next) => {
         if (err) {
             return res.status(400).json({ status: false, error: err.message });
         }
-        
         next();
     });
 };
@@ -78,7 +77,6 @@ const uploadToS3 = (req, res, next) => {
  * @description Export middleware functions for use in route handlers
  */
 module.exports = {
-    uploadSingle,         // Original middleware that errors if no file
     optionalUploadSingle, // New middleware that continues without file
     uploadToS3            // Adds file location to request body
 };

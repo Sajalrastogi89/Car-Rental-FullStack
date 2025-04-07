@@ -36,6 +36,11 @@ const carSubModelSchema = new mongoose.Schema({
     required: true,
     min: 1,
   },
+  finePercentage: {
+    type: Number,
+    default: 50, // Default 50% fine if not specified
+    min: 0,
+  },
   travelled: {
     type: Number,
     default: 0,
@@ -114,6 +119,7 @@ const bookingSchema = new mongoose.Schema(
     startDate: {
       type: Date,
       required: true,
+      index: true,
     },
     endDate: {
       type: Date,

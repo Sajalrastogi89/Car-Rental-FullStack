@@ -10,7 +10,7 @@ const Booking = require("../models/booking.model");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const mailService = require("../utils/mail");
-const { sendBidToQueue } = require("../utils/sqs");
+const { sendBidToQueue } = require("../utils/sqs/producer");
 
 /**
  * @description Create a new bid for a car
@@ -62,6 +62,8 @@ let addBid = async (req, res) => {
       car: carDetails,
       owner: ownerDetails,
     };
+
+   
 
     // Send bid to SQS queue for processing
     let sqs_response = await sendBidToQueue(biddingObject);
@@ -347,6 +349,7 @@ let addBookingAndDeleteOverlappingBids = async (findObject) => {
       },
       { _id: 1 }
     ).session(session);
+
 
     // Extract just the IDs of overlapping bids
     const rejectedBidIds = overlappingBids.map(b => b._id);

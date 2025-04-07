@@ -155,8 +155,5 @@ myApp.controller("UserController", [
     $scope.goToCarDetails = function(carId) {
       $state.go('carDetails', { id: carId });
     };
-
-    // Initialize controller
-    $scope.init();
   },
 ]);

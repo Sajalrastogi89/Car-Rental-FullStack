@@ -128,50 +128,6 @@ let getBookingsByCarId = async (req, res) => {
 };
 
 /**
- * @description Get invoice details for a paid booking
- * @function getInvoice
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Booking ID to retrieve invoice for
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with invoice data
- */
-let getInvoice = async (req, res) => {
-  try {
-    // Get booking ID from request parameters
-    let id = req.params.id;
-
-    // Create query object to find paid booking
-    let findObject = {};
-    findObject["_id"] = id;
-    findObject["paymentStatus"] = "paid";
-
-    // Add role-based restrictions
-    if (req.user.role === "owner") {
-      // Owners can only view invoices for their cars
-      findObject["owner._id"] = req.user._id;
-    } else if (req.user.role === "user") {
-      // Users can only view their own invoices
-      findObject["user._id"] = req.user._id;
-    }
-
-    // Find the booking
-    let booking = await Booking.findOne(findObject);
-    if (!booking)
-      return res
-        .status(404)
-        .json({ status: false, message: "Booking not found" });
-
-    // Send success response with invoice data
-    res.status(200).json({ status: true, invoiceData: booking });
-  } catch (error) {
-    // Send error response
-    res.status(500).json({ message: error });
-  }
-};
-
-/**
  * @description Get booked dates for a specific car
  * @function getBookedDates
  * @param {Object} req - Express request object
@@ -361,8 +317,7 @@ let updateBooking = async (req, res) => {
 // Export controller functions
 module.exports = { 
   getAllBookings, 
-  updateBooking, 
-  getInvoice, 
+  updateBooking,
   getBookedDates, 
   getBookingsByCarId
 };

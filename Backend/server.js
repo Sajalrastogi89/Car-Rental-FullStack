@@ -9,12 +9,17 @@ const connectDB = require("./config/db");
 const passport = require("./config/passport.config");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const { getBidFromQueue } = require("./utils/sqs");
+const fs = require('fs');
+const morgan = require('morgan');
 
 // Initialize Express app
 const app = express();
 app.use(cookieParser());
 app.use(passport.initialize());
+
+
+const accessLogStream = fs.createWriteStream('./access.log', { flags: 'a' });
+app.use(morgan('combined', { stream: accessLogStream }));
 
 // Create HTTP server and Socket.io instance
 const server = http.createServer(app);
@@ -73,8 +78,5 @@ app.use("/api/analysis", analysisRoutes);
 const PORT = process.env.PORT;
 server.listen(PORT, () => {
   connectDB();
-});
-
-// Schedule periodic SQS queue polling
-setInterval(getBidFromQueue, 3000);
+}); 
 

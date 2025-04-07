@@ -19,6 +19,6 @@ const myApp = angular.module('myApp', [
  * Sets up the AuthInterceptor to handle authentication for all HTTP requests
  */
 myApp.config(['$httpProvider', function($httpProvider) {
-  // Add authentication interceptor to handle auth tokens
+
   $httpProvider.interceptors.push('AuthInterceptor');
 }]);

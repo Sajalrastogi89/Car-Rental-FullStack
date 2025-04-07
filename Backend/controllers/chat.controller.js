@@ -6,6 +6,7 @@
 // Import required models
 const Chat = require('../models/chat.model');
 const Conversation = require('../models/conversation.model');
+const Attachment = require('../models/attachment.model');
 
 /**
  * @description Create a new chat between user and car owner
@@ -109,12 +110,24 @@ let addMessage = async (req, res) => {
     if (!chat) {
       return res.status(404).json({ status: false, message: "Chat not found" });
     }
+
+    let attachment;
+    if(isImage){
+        attachment = new Attachment({
+        imageUrl,
+        chatId,
+        senderId: userId
+      });
+      await attachment.save();
+    }
+
+
+
    
     // Create and save new message in conversation
     let conversation = new Conversation({
       message,
-      imageUrl, 
-      isImage, 
+      attachment, 
       sender: userId, 
       chatId
     });

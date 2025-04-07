@@ -112,7 +112,6 @@ myApp.controller("AddCar", [
      * and submits to the server
      */
     $scope.addCar = function () {
-      console.log("addCar", $scope.car);
       $scope.car.features = ($scope.selectedFeatures);
       
       // Basic validation

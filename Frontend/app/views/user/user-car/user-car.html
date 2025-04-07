@@ -212,7 +212,7 @@
                   type="submit"
                   class="btn btn-success btn-lg"
                   ng-click="addBid()"
-                  ng-disabled="carForm.$invalid || car.bidAmount < car.basePrice"
+                  ng-disabled="carForm.$invalid || car.bidAmount < car.basePrice || disableSubmit"
                   style="text-decoration: none !important;"
                 >
                   <i class="fa fa-gavel"></i> Place Bid

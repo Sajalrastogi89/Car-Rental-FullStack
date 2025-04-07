@@ -17,6 +17,8 @@ myApp.controller("ownerChatController", [
     $scope.currentMessage = { messageText: "" };
     $scope.selectedChat = null;
     $scope.isLoading = false;
+    $scope.isLoadingChat = false;
+    $scope.isChatListVisible = false; // For mobile chat list visibility
     let socket;
 
     // Image upload state
@@ -77,13 +79,18 @@ myApp.controller("ownerChatController", [
      * @description Select a chat and load its messages from the server
      * @param {Object} chat - The chat to select and load
      */
-    $scope.selectChat = function(chat) {
+    $scope.selectChat = function(chat) {      
+      $scope.isLoadingChat = true;
       $scope.selectedChat = chat;
+      
+      // Hide chat list on mobile after selection
+      if (window.innerWidth < 992) { // md breakpoint is 992px
+        $scope.isChatListVisible = false;
+      }
       
       // Reset states
       $scope.messages = [];
       $scope.cancelImageUpload();
-      $scope.isLoading = true;
 
       // Join chat room
       socket.emit("joinChat", chat._id);
@@ -98,7 +105,7 @@ myApp.controller("ownerChatController", [
           ToastService.error("Unable to fetch chat data", 3000);
         })
         .finally(() => {
-          $scope.isLoading = false;
+          $scope.isLoadingChat = false;
         });
     };
 
@@ -258,6 +265,11 @@ myApp.controller("ownerChatController", [
 
       return true;
     }
+
+    // Toggle chat list visibility for mobile
+    $scope.toggleChatList = function() {
+      $scope.isChatListVisible = !$scope.isChatListVisible;
+    };
 
     // Initialize controller
     $scope.init();

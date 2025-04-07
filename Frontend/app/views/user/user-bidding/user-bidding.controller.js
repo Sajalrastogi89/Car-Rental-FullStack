@@ -27,7 +27,7 @@ myApp.controller("userBiddingController", [
      * @type {string}
      * @description Current sort option for bid listing
      */
-    $scope.sortOption = "bidAmount"; // Default sort by bid amount
+    $scope.sortOption = ""; // Default sort by
 
     /**
      * @type {string}
@@ -46,6 +46,7 @@ myApp.controller("userBiddingController", [
      * @description Available sorting options for bid listing
      */
     $scope.sortOptions = [
+      { value: "", label: "Sort by" },
       { value: "bidAmount", label: "Price: Low to High" },
       { value: "createdAt", label: "Created Date: New to Old" },
       { value: "-createdAt", label: "Created Date: Old to New" },

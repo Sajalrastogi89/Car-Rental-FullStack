@@ -85,10 +85,9 @@ myApp.service("BookingService", [
         odometerType,
         carId
       };
-      console.log("updateObject", updateObject);
+   
       $http.patch(`http://localhost:8000/api/booking/updateBooking/${bookingId}`, updateObject)
         .then((response) => {
-          console.log("response booking service", response);
           deferred.resolve(response.data);
         })
         .catch((error) => {
