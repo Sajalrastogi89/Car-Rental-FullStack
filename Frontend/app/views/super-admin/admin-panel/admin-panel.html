@@ -25,73 +25,60 @@
     </div>
     
     <!-- Date Range Filter Panel -->
-    <div class="panel-body p-3">
-      <div class="panel panel-default shadow-sm mb-0">
-        <div class="panel-heading bg-light p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="panel-title m-0"><i class="fas fa-filter me-2"></i>Custom Date Range</h5>
-            <div class="btn-group">
-              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setLastMonth()">
-                <i class="far fa-calendar-alt me-1"></i> Last Month
-              </button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setLastThreeMonths()">
-                <i class="far fa-calendar-alt me-1"></i> Last 3 Months
-              </button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="setThisYear()">
-                <i class="far fa-calendar-alt me-1"></i> This Year
-              </button>
+    <div class="panel panel-default mb-4">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <i class="bi bi-calendar3"></i> Date Range Filter
+        </h4>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="control-label">Start Date</label>
+              <div class="input-group">
+                <input type="text"
+                       class="form-control"
+                       uib-datepicker-popup="yyyy-MM-dd"
+                       ng-model="dateRange.startDate"
+                       is-open="startOpened"
+                       datepicker-options="{ startingDay: 1 }"
+                       ng-focus="startOpened = true"
+                       close-text="Close" />
+                <span class="input-group-btn">
+                  <button class="btn btn-default" ng-click="startOpened = true">
+                    <i class="bi bi-calendar3"></i>
+                  </button>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="panel-body p-4">
-          <div class="row">
-            <div class="col-md-12">
-              <div class="date-range-container">
-                <div class="date-range-inputs">
-                  <div class="date-input-group">
-                    <label>Start Date</label>
-                    <div class="input-wrapper">
-                      <i class="far fa-calendar-alt"></i>
-                      <input type="text" 
-                             class="form-control" 
-                             uib-datepicker-popup="yyyy-MM-dd" 
-                             ng-model="dateRange.startDate" 
-                             is-open="startDateOpened"
-                             datepicker-options="dateOptions"
-                             close-text="Close"
-                             alt-input-formats="altInputFormats" />
-                      <button type="button" class="btn btn-link" ng-click="openStartDate($event)">
-                        <i class="fas fa-chevron-down"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="date-separator">
-                    <span>to</span>
-                  </div>
-                  <div class="date-input-group">
-                    <label>End Date</label>
-                    <div class="input-wrapper">
-                      <i class="far fa-calendar-alt"></i>
-                      <input type="text" 
-                             class="form-control" 
-                             uib-datepicker-popup="yyyy-MM-dd" 
-                             ng-model="dateRange.endDate" 
-                             is-open="endDateOpened"
-                             datepicker-options="dateOptions"
-                             close-text="Close"
-                             alt-input-formats="altInputFormats" />
-                      <button type="button" class="btn btn-link" ng-click="openEndDate($event)">
-                        <i class="fas fa-chevron-down"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="apply-button-container">
-                    <button class="btn btn-primary" ng-click="updateDateRange()">
-                      <i class="fas fa-sync-alt me-2"></i> Apply Filter
-                    </button>
-                  </div>
-                </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="control-label">End Date</label>
+              <div class="input-group">
+                <input type="text"
+                       class="form-control"
+                       uib-datepicker-popup="yyyy-MM-dd"
+                       ng-model="dateRange.endDate"
+                       is-open="endOpened"
+                       datepicker-options="{ startingDay: 1 }"
+                       ng-focus="endOpened = true"
+                       close-text="Close" />
+                <span class="input-group-btn">
+                  <button class="btn btn-default" ng-click="endOpened = true">
+                    <i class="bi bi-calendar3"></i>
+                  </button>
+                </span>
               </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="control-label">&nbsp;</label>
+              <button class="btn btn-primary btn-block" ng-click="updateDateRange()">
+                <i class="bi bi-funnel"></i> Apply Filter
+              </button>
             </div>
           </div>
         </div>
@@ -129,9 +116,9 @@
                 </div>
               </div>
               <div class="panel-body p-3">
-                <h3 class="mb-3 fw-bold text-center">₹{{ analytics.revenueSummary.totalRevenue | number:0 }}</h3>
+                <h3 class="mb-3 fw-bold text-center">₹{{ analytics.revenueSummary[0].totalRevenue | number:0 }}</h3>
                 <div class="d-flex align-items-center justify-content-between border-top pt-2">
-                  <span class="small text-muted">Avg. Booking: ₹{{ analytics.revenueSummary.avgBookingValue | number:0 }}</span>
+                  <span class="small text-muted">Avg. Booking: ₹{{ analytics.revenueSummary[0].avgBookingValue | number:0 }}</span>
                   
                 </div>
               </div>
@@ -148,9 +135,9 @@
                 </div>
               </div>
               <div class="panel-body p-3">
-                <h3 class="mb-3 fw-bold text-center">{{ analytics.revenueSummary.totalBookings | number:0 }}</h3>
+                <h3 class="mb-3 fw-bold text-center">{{ analytics.revenueSummary[0].totalBookings | number:0 }}</h3>
                 <div class="d-flex align-items-center justify-content-between border-top pt-2">
-                  <span class="small text-muted">Distance: {{ analytics.revenueSummary.totalDistance | number:0 }} km</span>
+                  <span class="small text-muted">Distance: {{ analytics.revenueSummary[0].totalDistance | number:0 }} km</span>
                   
                 </div>
               </div>
@@ -162,37 +149,34 @@
             <div class="panel panel-default h-100 mb-0 border-0">
               <div class="panel-heading bg-info text-white p-3">
                 <div class="d-flex align-items-center">
-                  <i class="fas fa-users fa-lg me-2"></i>
-                  <h5 class="panel-title m-0">Total Users</h5>
+                  <h5 class="panel-title m-0">Top User</h5>
                 </div>
               </div>
               <div class="panel-body p-3">
-                <h3 class="mb-3 fw-bold text-center">{{ analytics.platformMetrics.totalOwners + analytics.platformMetrics.totalRenters | number:0 }}</h3>
-                <div class="d-flex align-items-center justify-content-between border-top pt-2">
+                <h3 class="mb-3 fw-bold text-center">{{ analytics.topRenters.labels[0] }}</h3>
+                <div class="pull-right">
                   <div class="small text-muted">
-                    <span class="me-2">Owners: {{ analytics.platformMetrics.totalOwners | number:0 }}</span>
-                    <span>Renters: {{ analytics.platformMetrics.totalRenters | number:0 }}</span>
+                    <span class="me-2">Total: {{ analytics.topRenters.values[0] }}</span>
                   </div>
-                  
                 </div>
               </div>
             </div>
           </div>
           
-          <!-- Cars Panel -->
+          <!-- Owner Panel -->
           <div class="col-md-3 border-bottom">
             <div class="panel panel-default h-100 mb-0 border-0">
               <div class="panel-heading bg-warning text-white p-3">
                 <div class="d-flex align-items-center">
-                  <i class="fas fa-car fa-lg me-2"></i>
-                  <h5 class="panel-title m-0">Total Cars</h5>
+                  <h5 class="panel-title m-0">Top Owner</h5>
                 </div>
               </div>
               <div class="panel-body p-3">
-                <h3 class="mb-3 fw-bold text-center">{{ analytics.platformMetrics.totalCars | number:0 }}</h3>
-                <div class="d-flex align-items-center justify-content-between border-top pt-2">
-                  <span class="small text-muted">Avg. per Owner: {{ analytics.platformMetrics.avgCarsPerOwner }}</span>
-                  
+                <h3 class="mb-3 fw-bold text-center">{{ analytics.topOwners.labels[0] }}</h3>
+                <div class="pull-right">
+                  <div class="small text-muted">
+                    <span class="me-2">Total: {{ analytics.topOwners.values[0] }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -329,104 +313,104 @@
       </button>
     </div>
   </div>
-</div>
 
-<style>
-  .date-range-container {
-    background: #fff;
-    border-radius: 8px;
-    padding: 1.5rem;
-  }
-  
-  .date-range-inputs {
-    display: flex;
-    align-items: flex-end;
-    gap: 1.5rem;
-  }
-  
-  .date-input-group {
-    flex: 1;
-  }
-  
-  .date-input-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #495057;
-    font-weight: 500;
-  }
-  
-  .input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    transition: all 0.2s ease;
-  }
-  
-  .input-wrapper:hover {
-    border-color: #ced4da;
-    background: #fff;
-  }
-  
-  .input-wrapper:focus-within {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
-  }
-  
-  .input-wrapper i {
-    color: #6c757d;
-    margin-right: 0.75rem;
-  }
-  
-  .input-wrapper input {
-    border: none;
-    background: transparent;
-    flex: 1;
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
-  
-  .input-wrapper input:focus {
-    outline: none;
-    box-shadow: none;
-  }
-  
-  .input-wrapper .btn-link {
-    color: #6c757d;
-    padding: 0.25rem;
-  }
-  
-  .date-separator {
-    display: flex;
-    align-items: center;
-    padding-bottom: 2rem;
-  }
-  
-  .date-separator span {
-    background: #f8f9fa;
-    padding: 0.5rem 1rem;
-    color: #6c757d;
-    font-size: 0.875rem;
-    border-radius: 4px;
-  }
-  
-  .apply-button {
-    padding-bottom: 2rem;
-  }
-  
-  .apply-button .btn-primary {
-    background: #0d6efd;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-  
-  .apply-button .btn-primary:hover {
-    background: #0b5ed7;
-    transform: translateY(-1px);
-  }
-</style>
+  <!-- Configuration Management Panel -->
+  <div class="panel panel-default shadow-sm mb-4">
+    <div class="panel-heading bg-white p-3 border-bottom">
+      <h5 class="panel-title m-0 fw-bold"><i class="fas fa-cogs me-2 text-primary"></i>Configuration Management</h5>
+    </div>
+    <div class="panel-body p-4">
+      <div class="row">
+        <!-- Features Section -->
+        <div class="col-md-6 mb-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h5 class="panel-title"><i class="fas fa-list me-2"></i>Car Features</h5>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Add New Feature</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" ng-model="newFeature" placeholder="Enter feature name">
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="addFeature()">
+                      <i class="fas fa-plus me-1"></i> Add
+                    </button>
+                  </span>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- Cities Section -->
+        <div class="col-md-6 mb-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h5 class="panel-title"><i class="fas fa-city me-2"></i>Cities</h5>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Add New City</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" ng-model="newCity" placeholder="Enter city name">
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="addCity()">
+                      <i class="fas fa-plus me-1"></i> Add
+                    </button>
+                  </span>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="col-md-6 mb-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h5 class="panel-title"><i class="fas fa-tags me-2"></i>Car Categories</h5>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Add New Category</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" ng-model="newCategory" placeholder="Enter category name">
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="addCategory()">
+                      <i class="fas fa-plus me-1"></i> Add
+                    </button>
+                  </span>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- Fuel Types Section -->
+        <div class="col-md-6 mb-4">
+          <div class="panel panel-default">
+           
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Add New Fuel Type</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" ng-model="newFuelType" placeholder="Enter fuel type">
+                  <span class="input-group-btn">
+                    <button class="btn btn-primary" ng-click="addFuelType()">
+                      <i class="fas fa-plus me-1"></i> Add
+                    </button>
+                  </span>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

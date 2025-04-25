@@ -5,7 +5,7 @@
 myApp.controller("AddCar", [
   "$scope",
   "ToastService",
-  "CITIES", // Inject the constants
+  "CITIES", 
   "CATEGORIES",
   "FEATURES",
   "FUEL_TYPES",
@@ -112,7 +112,7 @@ myApp.controller("AddCar", [
      * and submits to the server
      */
     $scope.addCar = function () {
-      $scope.car.features = ($scope.selectedFeatures);
+      $scope.car.selectedFeatures = ($scope.selectedFeatures);
       
       // Basic validation
       let validationResult = CarFactory.validateCarData($scope.car);
@@ -122,7 +122,7 @@ myApp.controller("AddCar", [
       }
       const formData = new FormData();
       
-      $scope.car.features = JSON.stringify($scope.selectedFeatures);
+      $scope.car.selectedFeatures = JSON.stringify($scope.selectedFeatures);
 
       for (const key in $scope.car) {
         formData.append(key, $scope.car[key]);

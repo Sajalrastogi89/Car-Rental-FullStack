@@ -5,7 +5,8 @@
 myApp.service("BookingService", [
   "$http", 
   "$q", 
-  function($http, $q) {
+  "BASE_URL",
+  function($http, $q,BASE_URL) {
     // ==========================================
     // Booking Retrieval
     // ==========================================
@@ -19,7 +20,7 @@ myApp.service("BookingService", [
       let deferred = $q.defer();
       let config = { params };
       
-      $http.get("http://localhost:8000/api/booking/getAllBookings", config)
+      $http.get(`${BASE_URL}/api/booking/getAllBookings`, config)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -36,7 +37,7 @@ myApp.service("BookingService", [
     this.getBookingsCount = function() {
       let deferred = $q.defer();
       
-      $http.get("http://localhost:8000/api/analysis/booking-count")
+      $http.get(`${BASE_URL}/api/analysis/owner/booking-count`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -54,7 +55,7 @@ myApp.service("BookingService", [
     this.getBookingsByCarId = function(carId) {
       let deferred = $q.defer();
       
-      $http.get(`http://localhost:8000/api/booking/getBookingsByCarId/${carId}`)
+      $http.get(`${BASE_URL}/api/booking/getBookingsByCarId/${carId}`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -86,7 +87,7 @@ myApp.service("BookingService", [
         carId
       };
    
-      $http.patch(`http://localhost:8000/api/booking/updateBooking/${bookingId}`, updateObject)
+      $http.patch(`${BASE_URL}/api/booking/updateBooking/${bookingId}`, updateObject)
         .then((response) => {
           deferred.resolve(response.data);
         })

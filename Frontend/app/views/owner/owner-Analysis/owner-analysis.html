@@ -1,6 +1,6 @@
 <owner-navbar></owner-navbar>
 
-<div class="container-fluid py-4" ng-controller="OwnerAnalysisController" ng-init="init()">
+<div class="container-fluid py-4" ng-controller="OwnerAnalysisController">
   <!-- Header Section -->
   <div class="row mb-4">
     <div class="col-12">
@@ -11,27 +11,20 @@
       <!-- Date Range Filter -->
       <div class="panel panel-default mb-4">
         <div class="panel-heading">
-          <h4 class="panel-title">
-            <i class="bi bi-calendar3"></i> Date Range Filter
-          </h4>
+          <h4 class="panel-title">Date Range Filter</h4>
         </div>
         <div class="panel-body">
           <div class="row">
             <div class="col-md-4">
               <div class="form-group">
-                <label class="control-label">Start Date</label>
+                <label>Start Date</label>
                 <div class="input-group">
-              <input type="text"
-                     class="form-control"
-                     uib-datepicker-popup="yyyy-MM-dd"
-                     ng-model="dateRange.startDate"
-                     is-open="startOpened"
-                     datepicker-options="{ startingDay: 1 }"
-                     ng-focus="startOpened = true"
-                     close-text="Close" />
+                  <input type="text" class="form-control" uib-datepicker-popup="yyyy-MM-dd" ng-model="dateRange.startDate" 
+                         is-open="startOpened" readonly ng-click="startOpened = true" 
+                         value="{{dateRange.startDate | date:'yyyy-MM-dd'}}" />
                   <span class="input-group-btn">
                     <button class="btn btn-default" ng-click="startOpened = true">
-                      <i class="bi bi-calendar3"></i>
+                      <i class="glyphicon glyphicon-calendar"></i>
                     </button>
                   </span>
                 </div>
@@ -39,19 +32,14 @@
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label class="control-label">End Date</label>
+                <label>End Date</label>
                 <div class="input-group">
-              <input type="text"
-                     class="form-control"
-                     uib-datepicker-popup="yyyy-MM-dd"
-                     ng-model="dateRange.endDate"
-                     is-open="endOpened"
-                     datepicker-options="{ startingDay: 1 }"
-                     ng-focus="endOpened = true"
-                     close-text="Close" />
+                  <input type="text" class="form-control" uib-datepicker-popup="yyyy-MM-dd" ng-model="dateRange.endDate" 
+                         is-open="endOpened" readonly ng-click="endOpened = true" 
+                         value="{{dateRange.endDate | date:'yyyy-MM-dd'}}" />
                   <span class="input-group-btn">
                     <button class="btn btn-default" ng-click="endOpened = true">
-                      <i class="bi bi-calendar3"></i>
+                      <i class="glyphicon glyphicon-calendar"></i>
                     </button>
                   </span>
                 </div>
@@ -59,13 +47,11 @@
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label class="control-label">&nbsp;</label>
+                <label>&nbsp;</label>
                 <button class="btn btn-primary btn-block" ng-click="updateDateRange()">
-                <i class="bi bi-funnel"></i> Apply Filter
-              </button>
+                  Apply Filter
+                </button>
               </div>
-            </div>
-          </div>
             </div>
           </div>
         </div>
@@ -85,9 +71,9 @@
   <!-- Analytics Content -->
   <div ng-if="!isLoading && !error">
     <!-- Analytics Tabs -->
-    <uib-tabset class="mb-4">
+    <uib-tabset class="mb-4" active="currentTabIndex">
       <!-- Revenue Analysis Tab -->
-      <uib-tab>
+      <uib-tab index="0" select="onTabSelect(0)">
         <uib-tab-heading>
           <i class="bi bi-cash"></i> Revenue Analysis
         </uib-tab-heading>
@@ -122,7 +108,7 @@
       </uib-tab>
 
       <!-- Travel Analysis Tab -->
-      <uib-tab>
+      <uib-tab index="1" select="onTabSelect(1)">
         <uib-tab-heading>
           <i class="bi bi-geo-alt"></i> Travel Analysis
         </uib-tab-heading>
@@ -157,7 +143,7 @@
       </uib-tab>
 
       <!-- Booking Analysis Tab -->
-      <uib-tab>
+      <uib-tab index="2" select="onTabSelect(2)">
         <uib-tab-heading>
           <i class="bi bi-calendar-check"></i> Booking Analysis
         </uib-tab-heading>
@@ -192,7 +178,7 @@
       </uib-tab>
 
       <!-- Trip Type Analysis Tab -->
-      <uib-tab>
+      <uib-tab index="3" select="onTabSelect(3)">
         <uib-tab-heading>
           <i class="bi bi-car-front"></i> Trip Analysis
         </uib-tab-heading>
@@ -235,7 +221,7 @@
       </uib-tab>
 
       <!-- Vehicle Performance Tab -->
-      <uib-tab>
+      <uib-tab index="4" select="onTabSelect(4)">
         <uib-tab-heading>
           <i class="bi bi-speedometer2"></i> Vehicle Performance
         </uib-tab-heading>
@@ -289,8 +275,51 @@
         </div>
       </uib-tab>
 
+      <!-- Car Feature Analysis Tab -->
+      <uib-tab index="5" select="onTabSelect(5)">
+        <uib-tab-heading>
+          <i class="bi bi-gear"></i> Feature Analysis
+        </uib-tab-heading>
+        <div class="tab-content p-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">Car Feature Popularity Analysis</h4>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-lg-8">
+                  <div style="height: 300px;">
+                    <canvas id="featureAnalysisChart"></canvas>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Month</th>
+                          <th>Top Feature</th>
+                          <th>Bookings</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr ng-repeat="item in analytics.carFeatureAnalysis">
+                          <td>{{item.month}}/{{item.year}}</td>
+                          <td><span class="label label-primary">{{item.feature}}</span></td>
+                          <td><span class="badge">{{item.count}}</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </uib-tab>
+
       <!-- Late Returns Tab -->
-      <uib-tab>
+      <uib-tab index="6" select="onTabSelect(6)">
         <uib-tab-heading>
           <i class="bi bi-clock-history"></i> Late Returns
         </uib-tab-heading>
@@ -306,8 +335,8 @@
                     <div class="col-sm-3">
                       <div class="well text-center">
                         <h5>Total Late Returns</h5>
-                        <h3 ng-class="getStatusClass(analytics.lateReturnsAnalysis.totalLateReturns, 'lateReturns')">
-                          {{analytics.lateReturnsAnalysis.totalLateReturns}}
+                        <h3>
+                          {{analytics.lateReturnsAnalysis[0].totalLateReturns}}
                         </h3>
                         <p class="text-muted">Given Period</p>
                       </div>
@@ -315,21 +344,21 @@
                     <div class="col-sm-3">
                       <div class="well text-center">
                         <h5>Average Late Days</h5>
-                        <h3>{{analytics.lateReturnsAnalysis.avgLateDays | number:1}}</h3>
+                        <h3>{{analytics.lateReturnsAnalysis[0].avgLateDays | number:1}}</h3>
                         <p class="text-muted">Per Return</p>
                       </div>
                     </div>
                     <div class="col-sm-3">
                       <div class="well text-center">
                         <h5>Total Late Fees</h5>
-                        <h3>{{formatCurrency(analytics.lateReturnsAnalysis.totalLateFees)}}</h3>
+                        <h3>{{formatCurrency(analytics.lateReturnsAnalysis[0].totalLateFees)}}</h3>
                         <p class="text-muted">Revenue from Late Fees</p>
                       </div>
                     </div>
                     <div class="col-sm-3">
                       <div class="well text-center">
                         <h5>Maximum Late Days</h5>
-                        <h3>{{analytics.lateReturnsAnalysis.maxLateDays}}</h3>
+                        <h3>{{analytics.lateReturnsAnalysis[0].maxLateDays}}</h3>
                         <p class="text-muted">Worst Case</p>
                       </div>
                     </div>

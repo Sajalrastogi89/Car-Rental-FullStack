@@ -114,34 +114,34 @@
         <div class="text-left" style="margin-top: 8px; margin-left: 4px; font-size: 12px">
           <!-- Feature 1 -->
           <div
-            ng-if="$ctrl.car.features && $ctrl.car.features.length > 0"
+            ng-if="$ctrl.car.selectedFeatures && $ctrl.car.selectedFeatures.length > 0"
             style="margin-bottom: 2px"
           >
             <i class="fa fa-check-circle text-success"></i>
             <span style="color: #555; word-wrap: break-word"
-              >{{$ctrl.car.features[0]}}</span
+              >{{$ctrl.car.selectedFeatures[0]}}</span
             >
           </div>
 
           <!-- Feature 2 -->
           <div
-            ng-if="$ctrl.car.features && $ctrl.car.features.length > 1"
+            ng-if="$ctrl.car.selectedFeatures && $ctrl.car.selectedFeatures.length > 1"
             style="margin-bottom: 2px"
           >
             <i class="fa fa-check-circle text-success"></i>
             <span style="color: #555; word-wrap: break-word"
-              >{{$ctrl.car.features[1]}}</span
+              >{{$ctrl.car.selectedFeatures[1]}}</span
             >
           </div>
 
           <!-- Feature 3 -->
           <div
-            ng-if="$ctrl.car.features && $ctrl.car.features.length > 2"
+            ng-if="$ctrl.car.selectedFeatures && $ctrl.car.selectedFeatures.length > 2"
             style="margin-bottom: 2px"
           >
             <i class="fa fa-check-circle text-success"></i>
             <span style="color: #555; word-wrap: break-word"
-              >{{$ctrl.car.features[2]}}</span
+              >{{$ctrl.car.selectedFeatures[2]}}</span
             >
           </div>
         </div>

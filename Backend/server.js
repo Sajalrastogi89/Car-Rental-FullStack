@@ -17,7 +17,6 @@ const app = express();
 app.use(cookieParser());
 app.use(passport.initialize());
 
-
 const accessLogStream = fs.createWriteStream('./access.log', { flags: 'a' });
 app.use(morgan('combined', { stream: accessLogStream }));
 
@@ -25,7 +24,7 @@ app.use(morgan('combined', { stream: accessLogStream }));
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Or set to your frontend domain
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -33,9 +32,14 @@ app.set("io", io);
 
 // Socket.io event handlers
 io.on("connection", (socket) => {
+  console.log("New client connected");
+  
+
+
   // Handle joining a chat room
   socket.on("joinChat", (chatId) => {
     socket.join(chatId);
+    console.log(`Client joined chat room: ${chatId}`);
   });
   
   // Handle sending messages
@@ -45,7 +49,7 @@ io.on("connection", (socket) => {
   
   // Handle disconnection
   socket.on("disconnect", () => {
-    console.log("User disconnected :: ", socket.id);
+    console.log("Client disconnected :: ", socket.id);
   });
 });
 
@@ -75,8 +79,10 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/analysis", analysisRoutes);
 
 // Start server and connect to database
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
   connectDB();
 }); 
 
+module.exports = app; 

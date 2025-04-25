@@ -56,3 +56,5 @@ myApp.constant('FUEL_TYPES', [
   'Diesel',
   'Electric',
 ]);
+
+myApp.constant('BASE_URL', 'http://localhost:8000');

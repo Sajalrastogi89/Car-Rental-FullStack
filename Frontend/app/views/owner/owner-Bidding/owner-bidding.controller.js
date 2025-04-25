@@ -52,7 +52,7 @@ myApp.controller("ownerBiddingController", [
      * @description Available sorting options for bid listing
      */
     $scope.sortOptions = [
-      { value: "bidAmount", label: "Price: Low to High" },
+      { value: "bidAmount", label: "Price: High to Low" },
       { value: "createdAt", label: "Created Date: New to Old" },
       { value: "-createdAt", label: "Created Date: Old to New" },
     ];
@@ -111,11 +111,14 @@ myApp.controller("ownerBiddingController", [
       // Fetch filtered bids
       BiddingService.getAllBids(param)
         .then((response) => {
+          console.log(`response:`, response);
           $scope.biddings = response.bids;
           $scope.totalItems = response.metadata.total;
           $scope.currentPage = response.metadata.page;
         })
         .catch((e) => {
+          console.log(`param:`, param);
+          console.log(`e:`, e);
           ToastService.error("Unable to fetch Biddings", 3000);
         });
     };

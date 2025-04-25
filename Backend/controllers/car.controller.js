@@ -9,24 +9,6 @@ const Car = require('../models/car.model');
 
 /**
  * @description Add a new car listing
- * @function addCar
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing car details
- * @param {string} req.body.carName - Name or model of the car
- * @param {string} req.body.category - Vehicle category
- * @param {string} req.body.numberPlate - Vehicle registration number
- * @param {string} req.body.fuelType - Type of fuel used by the car
- * @param {number} req.body.basePrice - Base rental price
- * @param {number} req.body.pricePerKm - Additional charge per kilometer
- * @param {number} req.body.outStationCharges - Charges for out-of-city travel
- * @param {number} req.body.travelled - Total kilometers travelled by the car
- * @param {string} req.body.city - Location city of the car
- * @param {string} req.body.imageUrl - URL to the car image
- * @param {Array} req.body.features - List of features available in the car
- * @param {number} req.body.finePercentage - Percentage for late return fine
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and message
  */
 let addCar = async (req, res) => {
   try { 
@@ -48,16 +30,13 @@ let addCar = async (req, res) => {
       travelled, 
       city, 
       imageUrl, 
-      features, 
-      finePercentage 
+      finePercentage, 
+      selectedFeatures, 
     } = req.body;
    
-    // Parse features JSON string to array
-    features = JSON.parse(features);
+    // Parse selectedFeatures JSON string to array
+    selectedFeatures = JSON.parse(selectedFeatures);
    
-    // Format city name with first letter uppercase
-    city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-
     // Create car object with owner details
     let carObject = { 
       carName, 
@@ -70,15 +49,9 @@ let addCar = async (req, res) => {
       travelled, 
       city, 
       imageUrl, 
-      features, 
+      selectedFeatures, 
       finePercentage,
-      owner: {
-        _id: req.user._id, 
-        role: req.user.role, 
-        name: req.user.name, 
-        phone: req.user.phone, 
-        email: req.user.email
-      } 
+      owner: req.user 
     };
 
     // Save car to database
@@ -219,12 +192,11 @@ let getCars = async (req, res) => {
     
     // Execute aggregation
     let carsData = await Car.aggregate(pipeline);
-    
     // Extract metadata or provide defaults
-    const metadata = carsData[0].metadata[0] || { 
-      total: 0, 
-      page: page, 
-      limit: limit 
+    const metadata = carsData[0].metadata[0] || {
+      total: 0,
+      page: page,
+      limit: limit,
     };
   
     // Send success response
@@ -266,8 +238,7 @@ let deleteCar = async (req, res) => {
     // Soft delete by updating isDisabled flag
     let car = await Car.findOneAndUpdate(
       findObject, 
-      { $set: { isDisabled: true } }, 
-      { new: true }
+      { $set: { isDisabled: true } }
     );
     
     // Check if car exists and belongs to owner
@@ -279,8 +250,7 @@ let deleteCar = async (req, res) => {
     // Send success response
     res.status(200).json({
       status: true, 
-      message: "Car disabled", 
-      car: car
+      message: "Car disabled"
     });
   }
   catch (error) {

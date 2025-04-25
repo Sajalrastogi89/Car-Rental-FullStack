@@ -50,7 +50,7 @@ myApp.factory('CarFactory', [
       this.outStationCharges = this.validatePrice(data.outStationCharges, 'Outstation charges');
       this.travelled = this.validateTravelled(data.travelled);
       this.city = this.validateCity(data.city);
-      this.features = this.validateFeatures(data.features);
+      this.selectedFeatures = this.validateSelectedFeatures(data.selectedFeatures);
       this.finePercentage = this.validateFinePercentage(data.finePercentage);
       this.imageUrl = data.imageUrl || null;
       this.image = data.image || null;
@@ -61,14 +61,14 @@ myApp.factory('CarFactory', [
     // Validation Methods
     // ==========================================
     
-    Car.prototype = {
+   
       /**
        * Validates car name
        * @param {string} name - Car name to validate
        * @returns {string} Validated car name
        * @throws {Error} If validation fails
        */
-      validateCarName: function(name) {
+      Car.prototype.validateCarName = function(name) {
         if (!name || typeof name !== 'string' || name.trim().length === 0) {
           throw new Error('Car name is required');
         }
@@ -84,7 +84,7 @@ myApp.factory('CarFactory', [
        * @returns {string} Validated license plate
        * @throws {Error} If validation fails
        */
-      validateNumberPlate: function(plate) {
+      Car.prototype.validateNumberPlate = function(plate) {
         if (!plate || typeof plate !== 'string' || plate.trim().length === 0) {
           throw new Error('License plate number is required');
         }
@@ -103,7 +103,7 @@ myApp.factory('CarFactory', [
        * @returns {string} Validated category
        * @throws {Error} If validation fails
        */
-      validateCategory: function(category) {
+      Car.prototype.validateCategory = function(category) {
         if (!category || !VALIDATION_RULES.ALLOWED_CATEGORIES.includes(category)) {
           throw new Error(`Invalid category. Must be one of: ${VALIDATION_RULES.ALLOWED_CATEGORIES.join(', ')}`);
         }
@@ -116,7 +116,7 @@ myApp.factory('CarFactory', [
        * @returns {string} Validated fuel type
        * @throws {Error} If validation fails
        */
-      validateFuelType: function(fuelType) {
+      Car.prototype.validateFuelType = function(fuelType) {
         if (!fuelType || !VALIDATION_RULES.ALLOWED_FUEL_TYPES.includes(fuelType)) {
           throw new Error(`Invalid fuel type. Must be one of: ${VALIDATION_RULES.ALLOWED_FUEL_TYPES.join(', ')}`);
         }
@@ -130,7 +130,7 @@ myApp.factory('CarFactory', [
        * @returns {number} Validated price
        * @throws {Error} If validation fails
        */
-      validatePrice: function(price, fieldName) {
+      Car.prototype.validatePrice = function(price, fieldName) {
         const numPrice = parseFloat(price);
         if (isNaN(numPrice) || numPrice < VALIDATION_RULES.MIN_PRICE) {
           throw new Error(`${fieldName} must be at least ${VALIDATION_RULES.MIN_PRICE}`);
@@ -149,7 +149,7 @@ myApp.factory('CarFactory', [
        * @returns {number} Validated fine percentage (defaults to 50%)
        * @throws {Error} If validation fails
        */
-      validateFinePercentage: function(percentage) {
+      Car.prototype.validateFinePercentage = function(percentage) {
         const numPercentage = parseFloat(percentage);
         if (isNaN(numPercentage)) {
           // Default value if not provided
@@ -173,7 +173,7 @@ myApp.factory('CarFactory', [
        * @returns {number} Validated traveled kilometers
        * @throws {Error} If validation fails
        */
-      validateTravelled: function(travelled) {
+      Car.prototype.validateTravelled = function(travelled) {
         const numTravelled = parseInt(travelled, 10);
         
         if (isNaN(numTravelled) || numTravelled < 0) {
@@ -188,7 +188,7 @@ myApp.factory('CarFactory', [
        * @returns {string} Validated city
        * @throws {Error} If validation fails
        */
-      validateCity: function(city) {
+      Car.prototype.validateCity = function(city) {
         if (!city || !VALIDATION_RULES.ALLOWED_CITIES.includes(city)) {
           throw new Error(`Invalid city. Must be one of: ${VALIDATION_RULES.ALLOWED_CITIES.join(', ')}`);
         }
@@ -201,16 +201,16 @@ myApp.factory('CarFactory', [
        * @returns {Array} Validated features list
        * @throws {Error} If validation fails
        */
-      validateFeatures: function(features) {
-        if (!features || !Array.isArray(features) || features.length === 0) {
+      Car.prototype.validateSelectedFeatures = function(selectedFeatures) {
+        if (!selectedFeatures || !Array.isArray(selectedFeatures) || selectedFeatures.length === 0) {
           throw new Error('At least one feature is required');
         }
         
-        if (features.length > 3) {
+        if (selectedFeatures.length > 3) {
           throw new Error('Maximum 3 features allowed');
         }
         
-        return features;
+        return selectedFeatures;
       },
       
       /**
@@ -221,7 +221,7 @@ myApp.factory('CarFactory', [
        * @returns {Array} result.errors - List of error messages
        * @returns {string} result.message - Combined error message or success message
        */
-      validate: function() {
+      Car.prototype.validate = function() {
         const errors = [];
         
         // Try validating each field, collecting errors
@@ -255,7 +255,7 @@ myApp.factory('CarFactory', [
         try { this.validateCity(this.city); } 
         catch (e) { errors.push(e.message); }
         
-        try { this.validateFeatures(this.features); } 
+        try { this.validateSelectedFeatures(this.selectedFeatures); } 
         catch (e) { errors.push(e.message); }
         
         // Check if image exists
@@ -269,7 +269,7 @@ myApp.factory('CarFactory', [
           message: errors.length > 0 ? errors.join('. ') : 'Car data is valid'
         };
       }
-    };
+   
     
     // ==========================================
     // Factory Public API

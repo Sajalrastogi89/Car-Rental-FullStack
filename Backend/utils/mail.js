@@ -260,9 +260,102 @@ const sendBidRejectedEmail = async (data) => {
   });
 };
 
-// Add the new functions to the module exports
+/**
+ * @description Sends a bid confirmation email when a bid is successfully added
+ * @param {Object} data - Bid and user information data
+ * @param {string} data.userEmail - Bidder's email address
+ * @param {string} data.userName - Bidder's full name
+ * @param {string} data.carName - Name/model of the car being bid on
+ * @param {number} data.bidAmount - Bid amount value
+ * @param {string} data.startDate - Booking start date
+ * @param {string} data.endDate - Booking end date
+ * @param {string} data.tripType - Type of trip (inCity/outStation)
+ * @param {string} data.ownerName - Car owner's name
+ * @param {string} data.ownerEmail - Car owner's email
+ * @param {string} data.ownerPhone - Car owner's phone number
+ * @param {string} data.carDetails - Additional car details
+ * @returns {Promise<Object>} - Email sending result information
+ */
+const sendBidAddedEmail = async (data) => {
+  const subject = `Bid Confirmation for ${data.carName}`;
+  
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+  
+  const startDate = formatDate(data.startDate);
+  const endDate = formatDate(data.endDate);
+  
+  // Calculate duration
+  const start = new Date(data.startDate);
+  const end = new Date(data.endDate);
+  const durationDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+      <div style="text-align: center; margin-bottom: 20px; background-color: #2196F3; padding: 15px; border-radius: 5px; color: white;">
+        <h1 style="margin-top: 0;">Bid Submitted Successfully!</h1>
+        <p style="font-size: 18px; margin-bottom: 0;">Thank you for your bid, ${data.userName}.</p>
+      </div>
+      
+      <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+        <h2 style="color: #333; margin-top: 0; margin-bottom: 15px;">Your Bid Details:</h2>
+        <p><strong>Car:</strong> ${data.carName}</p>
+        ${data.carDetails ? `<p><strong>Details:</strong> ${data.carDetails}</p>` : ''}
+        <p><strong>Trip Type:</strong> ${data.tripType}</p>
+        <p><strong>Bid Amount:</strong> ₹${data.bidAmount.toFixed(2)}</p>
+        <p><strong>Start Date:</strong> ${startDate}</p>
+        <p><strong>End Date:</strong> ${endDate}</p>
+        <p><strong>Duration:</strong> ${durationDays} day${durationDays !== 1 ? 's' : ''}</p>
+      </div>
+      
+      <div style="margin-bottom: 20px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <h2 style="color: #333; margin-top: 0; margin-bottom: 15px;">Car Owner Details:</h2>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+          <p style="margin-top: 0;"><strong>Owner:</strong> ${data.ownerName}</p>
+          <p><strong>Email:</strong> ${data.ownerEmail}</p>
+          ${data.ownerPhone ? `<p style="margin-bottom: 0;"><strong>Phone:</strong> ${data.ownerPhone}</p>` : ''}
+        </div>
+      </div>
+      
+      <div style="background-color: #e3f2fd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+        <h2 style="color: #1565C0; margin-top: 0; margin-bottom: 15px;">What's Next?</h2>
+        <ul style="padding-left: 20px; margin-bottom: 0;">
+          <li>The car owner will review your bid</li>
+          <li>You'll receive an email when your bid is accepted or rejected</li>
+          <li>If accepted, you'll need to complete the payment process</li>
+          <li>Keep an eye on your email for updates</li>
+        </ul>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+        <p>Thank you for using EZYCAR.</p>
+        <div style="margin-top: 15px;">
+          <a href="process.env.EMAIL_USERNAME" style="display: inline-block; background-color: #f5f5f5; color: #333; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Contact Support</a>
+        </div>
+        <p style="font-size: 12px; color: #777; margin-top: 20px;">This is an automated message, please do not reply to this email.</p>
+      </div>
+    </div>
+  `;
+  
+  return sendMail({
+    to: data.userEmail,
+    subject,
+    html
+  });
+};
+
+// Update module exports to include the new function
 module.exports = {
   sendMail,
   sendBidAcceptedEmail,
-  sendBidRejectedEmail
+  sendBidRejectedEmail,
+  sendBidAddedEmail
 };

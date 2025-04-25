@@ -1,27 +1,11 @@
-/**
- * @description Controller for managing car bookings and rental operations
- * @module controllers/booking
- */
-
-// Import required models and dependencies
-const Booking = require("../models/booking.model");
 const mongoose = require("mongoose");
+
+// Import models
+const Booking = require("../models/booking.model");
 const Car = require("../models/car.model");
 
 /**
  * @description Get all bookings for the authenticated user with filtering and pagination
- * @function getAllBookings
- * @param {Object} req - Express request object
- * @param {Object} req.query - Query parameters for filtering and pagination
- * @param {string} [req.query.carName] - Filter by car name (partial match)
- * @param {string} [req.query.status] - Filter by booking status
- * @param {string} [req.query.sortBy=createdAt] - Field to sort by
- * @param {number} [req.query.sortOrder=-1] - Sort order (1 for ascending, -1 for descending)
- * @param {number} [req.query.page=1] - Page number for pagination
- * @param {number} [req.query.limit=10] - Results per page
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with filtered bookings and metadata
  */
 let getAllBookings = async (req, res) => {
   try {
@@ -104,12 +88,6 @@ let getAllBookings = async (req, res) => {
 
 /**
  * @description Get all bookings for a specific car
- * @function getBookingsByCarId
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Car ID to retrieve bookings for
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with array of bookings
  */
 let getBookingsByCarId = async (req, res) => {
   try {
@@ -129,12 +107,6 @@ let getBookingsByCarId = async (req, res) => {
 
 /**
  * @description Get booked dates for a specific car
- * @function getBookedDates
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Car ID to check booked dates
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with array of booked dates
  */
 let getBookedDates = async (req, res) => {
   try {
@@ -170,13 +142,6 @@ let getBookedDates = async (req, res) => {
  * @description Update booking odometer readings and calculate final payment
  * @function updateBooking
  * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.bookingId - ID of the booking to update
- * @param {number} req.body.odometerValue - Current odometer reading value
- * @param {string} req.body.odometerType - Type of reading ('start' or 'end')
- * @param {string} req.body.carId - ID of the car
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID of car owner
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with status and updated booking
  */

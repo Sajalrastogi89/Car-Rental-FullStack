@@ -21,13 +21,6 @@ myApp.factory('BidFactory', ['$q', function($q) {
   
   /**
    * Bid constructor - Creates a new bid with validation
-   * @param {Object} data - Bid data to initialize with
-   * @param {string} data.carId - ID of car being bid on
-   * @param {number} data.bidAmount - Amount of the bid
-   * @param {string|Date} data.startDate - Start date of rental period
-   * @param {string|Date} data.endDate - End date of rental period
-   * @param {string} [data.status='pending'] - Bid status
-   * @param {string} [data.tripType] - Type of trip (inCity/outStation)
    */
   function Bid(data) {
     // Use empty object if no data provided
@@ -52,14 +45,13 @@ myApp.factory('BidFactory', ['$q', function($q) {
   // Validation Methods
   // ==========================================
   
-  Bid.prototype = {
     /**
      * Validates car ID
      * @param {string} carId - Car ID to validate
      * @returns {string} Validated car ID
      * @throws {Error} If validation fails
      */
-    validateCarId: function(carId) {
+    Bid.prototype.validateCarId = function(carId) {
       if (!carId) {
         throw new Error('Car ID is required');
       }
@@ -73,7 +65,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @returns {number} Validated bid amount
      * @throws {Error} If validation fails
      */
-    validateBidAmount: function(amount, basePrice) {
+    Bid.prototype.validateBidAmount = function(amount, basePrice) {
       if (!amount) {
         throw new Error('Bid amount is required');
       }
@@ -97,7 +89,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @returns {string} Validated start date
      * @throws {Error} If validation fails
      */
-    validateStartDate: function(date) {
+    Bid.prototype.validateStartDate = function(date) {
       if (!date) {
         throw new Error('Start date is required');
       }
@@ -129,7 +121,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @returns {string} Validated end date
      * @throws {Error} If validation fails
      */
-    validateEndDate: function(endDate, startDate) {
+    Bid.prototype.validateEndDate = function(endDate, startDate) {
       if (!endDate) {
         throw new Error('End date is required');
       }
@@ -159,10 +151,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @returns {string} Validated trip type or default value
      * @throws {Error} If validation fails
      */
-    validateTripType: function(tripType) {
-      if (!tripType) {
-        return 'local'; // Default trip type
-      }
+    Bid.prototype.validateTripType = function(tripType) {
       
       if (!VALIDATION_RULES.TRIP_TYPES.includes(tripType)) {
         throw new Error(`Invalid trip type. Must be one of: ${VALIDATION_RULES.TRIP_TYPES.join(', ')}`);
@@ -177,7 +166,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @param {string|Date} endDate - End date
      * @returns {number} Number of days
      */
-    calculateDays: function(startDate, endDate) {
+    Bid.prototype.calculateDays = function(startDate, endDate) {
       if (!startDate || !endDate) {
         return 0;
       }
@@ -185,7 +174,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       const diffTime = Math.abs(end - start);
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24))+1;
     },
     
     /**
@@ -196,7 +185,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
      * @returns {Array} result.errors - List of error messages
      * @returns {string} result.message - Combined error message or success message
      */
-    validate: function() {
+    Bid.prototype.validate = function() {
       const errors = [];
       
       // Try validating each field, collecting errors
@@ -219,8 +208,7 @@ myApp.factory('BidFactory', ['$q', function($q) {
         isValid: errors.length === 0,
         errors: errors,
         message: errors.length > 0 ? errors.join('. ') : 'Bid data is valid'
-      };
-    }
+    };
   };
   
   // ==========================================
@@ -230,8 +218,6 @@ myApp.factory('BidFactory', ['$q', function($q) {
   return {
     /**
      * Creates a new bid instance with validation
-     * @param {Object} data - Bid data to create from
-     * @returns {Promise<Bid>} Promise resolving to bid instance
      */
     createBid: function(data) {
       const deferred = $q.defer();
@@ -246,11 +232,6 @@ myApp.factory('BidFactory', ['$q', function($q) {
     
     /**
      * Validates bid data without creating a bid instance
-     * @param {Object} data - Bid data to validate
-     * @returns {Object} Validation result object
-     * @returns {boolean} result.isValid - Whether validation passed
-     * @returns {Array} result.errors - List of validation errors
-     * @returns {string} result.message - Combined error message
      */
     validateBidData: function(data) {
       try {
@@ -282,13 +263,71 @@ myApp.factory('BidFactory', ['$q', function($q) {
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     },
     
-    /**
-     * Format price with Indian Rupee symbol
-     * @param {number|string} amount - Amount to format
-     * @returns {string} Formatted price with currency symbol
-     */
-    formatPrice: function(amount) {
-      return `₹${parseFloat(amount || 0).toFixed(2)}`;
+
+
+    recommendBids: function (bids) {
+    
+      function latestNonConflict(i) {
+          let low = 0, high = i - 1;
+          while (low <= high) {
+              const mid = Math.floor((low + high) / 2);
+              if (new Date(bids[mid].endDate) < new Date(bids[i].startDate)) {
+                  if (mid + 1 <= high && new Date(bids[mid + 1].endDate) < new Date(bids[i].startDate)) {
+                      low = mid + 1;
+                  } else {
+                      return mid;
+                  }
+              } else {
+                  high = mid - 1;
+              }
+          }
+          return -1;
+      }
+    
+      const n = bids?.length;
+      if(n === 0) return {
+        maxProfit: 0,
+        selectedBids: []
+      };
+      const dp = new Array(n).fill(0);
+      const path = new Array(n).fill(null);
+    
+      const getProfit = (bid) => {
+          const start = new Date(bid.startDate);
+          const end = new Date(bid.endDate);
+          const durationDays = (end - start) / (1000 * 60 * 60 * 24)+1;
+          let profit = bid.bidAmount * durationDays;
+          if(bid.tripType === 'outStation') profit += (bid.car.outStationCharges * durationDays);
+          return profit;
+      };
+    
+      dp[0] = getProfit(bids[0]);
+      path[0] = [0];
+    
+      for (let i = 1; i < n; i++) {
+          const inclProfit = getProfit(bids[i]);
+          console.log("inclProfit",inclProfit);
+          const l = latestNonConflict(i);
+          const incl = inclProfit + (l !== -1 ? dp[l] : 0);
+    
+          if (incl > dp[i - 1]) {
+              dp[i] = incl;
+              path[i] = l !== -1 ? [...path[l], i] : [i];
+          } else {
+              dp[i] = dp[i - 1];
+              path[i] = [...path[i - 1]];
+          }
+      }
+    
+      const selectedIndices = path[n - 1];
+      const selectedBids = selectedIndices.map(i => bids[i]);
+    
+      return {
+          maxProfit: dp[n - 1],
+          selectedBids
+      };
     }
+    
+  
   };
 }]);

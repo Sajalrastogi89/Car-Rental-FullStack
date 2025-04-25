@@ -61,6 +61,7 @@ myApp.controller("carController", [
       getCarById()
         .then((car) => {
           $scope.car = car;
+          $scope.car.tripType = "inCity";
         })
         .catch((e) => {
           ToastService.error(e, 3000);
@@ -261,22 +262,20 @@ myApp.controller("carController", [
       BiddingService.addBid(bid)
         .then((response) => {
           $scope.disableSubmit = false;
-          // Reset form state
+
+
           $scope.carForm.$setPristine();
-          $scope.carForm.$setUntouched();
           
+          // Reset date picker if exists
           if ($scope.rangePicker) {
             $scope.rangePicker.clear();
           }
-          
-          // Reset form fields
           $scope.car.startDate = null;
           $scope.car.endDate = null;
           $scope.car.bidAmount = null;
-          $scope.car.dateRange = null;
           $scope.car.tripType = "inCity";
           
-          ToastService.success("Bid placed successfully!", 3000);
+          ToastService.info("Bid addition in progress, check email for confirmation", 3000);
         })
         .catch((error) => {
           $scope.disableSubmit = false;
@@ -302,8 +301,5 @@ myApp.controller("carController", [
           ToastService.error(error.data.message || "Failed to start chat. Please try again.", 3000);
         });
     };
-
-    // Initialize controller
-    $scope.init();
   },
 ]);

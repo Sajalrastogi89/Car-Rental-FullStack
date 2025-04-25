@@ -10,6 +10,8 @@ myApp.controller("OwnerDashboardController", [
   "$uibModal",
   "BookingService",
   "CarService",
+  "BiddingService",
+  "BidFactory",
   function (
     $scope,
     $q,
@@ -17,7 +19,9 @@ myApp.controller("OwnerDashboardController", [
     ToastService,
     $uibModal,
     BookingService,
-    CarService
+    CarService,
+    BiddingService,
+    BidFactory
   ) {
     // ==========================================
     // State Management
@@ -210,6 +214,38 @@ myApp.controller("OwnerDashboardController", [
         });
     };
 
+
+    $scope.openBestBidsModal = function(car) {
+      BiddingService.getBestBidsByCarId(car._id)
+        .then((allBids) => {
+          const bestBids = BidFactory.recommendBids(allBids.bids);
+          let modalInstance = $uibModal.open({
+            animation: true,
+            component: 'bestBidsModal',
+            resolve: {
+              dataObject: function () {
+                return bestBids.selectedBids;
+              },
+              maxProfit: function () {
+                return bestBids.maxProfit;
+              }
+            },
+          });
+      
+          modalInstance.result.then(
+            function (response) {
+              console.log("Modal closed with response:", response);
+            },
+            function () {
+              console.log("Modal dismissed.");
+            }
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    };
+
     /**
      * @description Open modal to view all bookings for a specific car
      * @param {Object} car - The car object to view bookings for
@@ -303,15 +339,26 @@ myApp.controller("OwnerDashboardController", [
         
           CarService.updateCar(car._id, updateCar)
             .then(function(response) {
-              // Update the car in the local array
               Object.assign(car, response.car);
-              ToastService.success("Car price updated successfully", 3000);
+              ToastService.success("Car details updated successfully", 3000);
             })
             .catch(function(error) {
-              ToastService.error("Failed to update car price", 3000);
+              ToastService.error("Failed to update car details", 3000);
             });
         }
       });
+    };
+
+    $scope.getBestBidsByCarId = function(carId) {
+      BiddingService.getBestBidsByCarId(carId)
+        .then(function(response) {
+          console.log("response",response);
+          const bestBids = BidFactory.recommendBids(response.bids);
+          console.log("bestBids",bestBids);
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
     };
 
   },

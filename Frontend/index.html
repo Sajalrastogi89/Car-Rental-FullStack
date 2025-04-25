@@ -70,6 +70,7 @@
   <script src="app/services/Dashboard.service.js"></script>
   <script src="app/services/Car.service.js"></script>
   <script src="app/services/Booking.service.js"></script>
+  <script src="app/services/Analysis.service.js"></script>
   
   <!-- ==========================================
        Controllers
@@ -96,6 +97,7 @@
   
   <!-- Admin Controllers -->
   <script src="app/views/super-admin/admin-panel/admin-panel.controller.js"></script>
+  <script src="\app\services\config.service.js"></script>
   
   <!-- ==========================================
        Directives, Factories, and Components
@@ -111,7 +113,7 @@
   <script src="app/factories/AuthInterceptor.factory.js"></script>
   <script src="app/factories/car.factory.js"></script>
   <script src="app/factories/bid.factory.js"></script>
-  
+  <script src="app/factories/pdf.factory.js"></script>
   <!-- Components -->
   <script src="app/components/user-navbar/user-navbar.js"></script>
   <script src="app/components/owner-navbar/owner-navbar.js"></script>
@@ -120,13 +122,13 @@
   <script src="app/components/modals/alert.component.js"></script>
   <script src="app/components/modals/editCarForm.component.js"></script>
   <script src="app/components/modals/invoice.component.js"></script>
+  <script src="app/components/modals/bidding.component.js"></script>
   
   <!-- Utilities -->
   <script src="app/utils/constant.js"></script>
-  <script src="app/utils/pdfGenerator.js"></script>
 </head>
 
-<body>
+<body ng-controller="MainController">
   <!-- Main application view container -->
   <div ui-view></div>
 </body>

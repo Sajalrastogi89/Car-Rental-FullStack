@@ -61,6 +61,9 @@ myApp.controller("AuthController", [
           // Store the JWT token in sessionStorage
           sessionStorage.setItem('token', response.auth.token);
           
+          // Initialize socket connection
+          // UserFactory.connectSocket(response.user);
+          
           // Redirect to appropriate dashboard based on user role
           $state.go(response.user.role);
         })

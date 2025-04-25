@@ -1,9 +1,3 @@
-/**
- * @description Controller for managing user authentication operations
- * @module controllers/auth
- */
-
-// Import required dependencies
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const bcryptjs = require("bcryptjs");
@@ -11,13 +5,6 @@ const { validationResult } = require("express-validator");
 
 /**
  * @description Authenticate a user and generate JWT token
- * @function login
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing login credentials
- * @param {string} req.body.email - User's email address
- * @param {string} req.body.password - User's password
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with user data and authentication token
  */
 let login = async (req, res) => {
   try {
@@ -61,11 +48,10 @@ let login = async (req, res) => {
       { expiresIn }
     );
 
-    // Remove sensitive information from user object
     let userData = user.toObject();
     delete userData.password;
 
-    // Send response with user data and token
+
     res.status(200).json({ 
       status: true, 
       user: userData,
@@ -86,17 +72,6 @@ let login = async (req, res) => {
 
 /**
  * @description Register a new user account
- * @function signup
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing user details
- * @param {string} req.body.name - User's full name
- * @param {string} req.body.email - User's email address
- * @param {string} req.body.password - User's password
- * @param {string} req.body.role - User's role (owner/user)
- * @param {string} req.body.phone - User's phone number
- * @param {boolean} [req.body.verified] - User verification status
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with created user data
  */
 let signup = async (req, res) => {
   try {
@@ -154,25 +129,16 @@ let signup = async (req, res) => {
 
 /**
  * @description Get authenticated user's profile information
- * @function profile
- * @param {Object} req - Express request object
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with user profile data
  */
 let profile = function (req, res) {
   try {
-    // Remove sensitive information from user object
     let userData = req.user.toObject();
     delete userData.password;
-    
-    // Send user profile data
     res.status(200).json({
       status: true, 
       userData
     });
   } catch (error) {
-    // Send error response
     res.status(500).json({
       status: false, 
       message: "Server error" 

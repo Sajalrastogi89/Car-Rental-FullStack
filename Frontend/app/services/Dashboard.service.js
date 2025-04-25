@@ -6,7 +6,8 @@ myApp.service("DashboardService", [
   "$q",
   "LocationFactory",
   "$http",
-  function ($q,LocationFactory, $http) {
+  "BASE_URL",
+  function ($q, LocationFactory, $http, BASE_URL) {
     // ==========================================
     // Field Data Operations
     // ==========================================
@@ -17,9 +18,8 @@ myApp.service("DashboardService", [
      */
     this.getCategories = function () {
       let deferred = $q.defer();
-
       $http
-        .get("http://localhost:8000/api/field/getCategories")
+        .get(`${BASE_URL}/api/field/getCategories`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -35,9 +35,8 @@ myApp.service("DashboardService", [
      */
     this.getFuelTypes = function () {
       let deferred = $q.defer();
-
       $http
-        .get("http://localhost:8000/api/field/getFuelTypes")
+        .get(`${BASE_URL}/api/field/getFuelTypes`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -57,9 +56,8 @@ myApp.service("DashboardService", [
      */
     this.getCities = function () {
       let deferred = $q.defer();
-
       $http
-        .get("http://localhost:8000/api/field/getCities")
+        .get(`${BASE_URL}/api/field/getCities`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -85,5 +83,6 @@ myApp.service("DashboardService", [
         });
       return deferred.promise;
     };
+
   },
 ]);

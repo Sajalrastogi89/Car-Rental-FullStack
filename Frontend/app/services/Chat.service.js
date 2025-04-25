@@ -6,7 +6,8 @@ myApp.service("chatService", [
   "$q",
   "ToastService",
   "$http",
-  function ($q, ToastService, $http) {
+  "BASE_URL",
+  function ($q, ToastService, $http,BASE_URL) {
     // ==========================================
     // Chat Management
     // ==========================================
@@ -23,7 +24,7 @@ myApp.service("chatService", [
         "car":car,
         "owner":owner,
       };
-      $http.post("http://localhost:8000/api/chat/addNewChat",chatObject) 
+      $http.post(`${BASE_URL}/api/chat/addNewChat`,chatObject) 
       .then((response) => {
         socket = io("http://127.0.0.1:8080");
         socket.emit("joinChat", response.data._id);
@@ -49,7 +50,7 @@ myApp.service("chatService", [
     this.getChats = function(){
       let deferred=$q.defer();
       $http
-      .get("http://localhost:8000/api/chat/getChats")
+      .get(`${BASE_URL}/api/chat/getChats`)
       .then((response)=>{
         deferred.resolve(response.data);
       }).catch((e)=>{
@@ -65,7 +66,7 @@ myApp.service("chatService", [
      */
     this.getSelectedChatData = function(id){
       let deferred=$q.defer();
-     $http.get(`http://localhost:8000/api/chat/getConversation/${id}`)
+     $http.get(`${BASE_URL}/api/chat/getConversation/${id}`)
       .then((allConversation)=>{
         deferred.resolve(allConversation.data);
       }).catch((e)=>{
@@ -92,7 +93,7 @@ myApp.service("chatService", [
           'Content-Type': undefined
         }
       };
-      $http.post(`http://localhost:8000/api/chat/sendMessage/${id}`,messageData, config).then((messageData)=>{
+      $http.post(`${BASE_URL}/api/chat/sendMessage/${id}`,messageData, config).then((messageData)=>{
         
         deferred.resolve(messageData.data);
       })

@@ -12,12 +12,10 @@ const attachmentSchema = new mongoose.Schema({
   },
   chatId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Chat",
     required: true,
   },
   senderId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
     required: true,
   },
 });
@@ -30,12 +28,10 @@ const conversationSchema = new mongoose.Schema(
     attachment: attachmentSchema,
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
       required: true,
     },
     chatId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Chat",
       required: true,
     },
   },

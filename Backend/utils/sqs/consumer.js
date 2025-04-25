@@ -1,6 +1,7 @@
 // Import required dependencies
 const AWS = require('aws-sdk');
 const Bid = require('../../models/bidding.model');
+const { sendBidAddedEmail } = require('../mail');
 
 // Initialize AWS SQS client with credentials from environment variables
 const sqs = new AWS.SQS({
@@ -9,20 +10,15 @@ const sqs = new AWS.SQS({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-/**
- * @description Receive messages from AWS SQS queue
- * @param {Object} sqs - AWS SQS client instance
- * @param {Object} params - Parameters including QueueUrl and MaxNumberOfMessages
- * @returns {Promise<Object>} - Retrieved messages data
- */
+
 async function awsReceiveMessage(sqs, params) {
   try {
-    // Use the SQS SDK to receive a message with the specified parameters
+
     const data = await sqs.receiveMessage(params).promise();
-    // Return the response data
+   
     return data;
   } catch (error) {
-    // If an error occurs, log the error message
+  
     console.error('Error:', error);
   }
 }
@@ -33,8 +29,6 @@ async function awsReceiveMessage(sqs, params) {
  */
 async function processAndDeleteMessage(message) {
   try {
-    // Process the message (parse the bid data and save to DB)
-    const bidData = JSON.parse(message.Body);
 
     const deleteParams = {
       QueueUrl: process.env.SQS_QUEUE_URL,
@@ -63,15 +57,24 @@ const getBidFromQueue = async () => {
   if (!response.Messages || response.Messages.length === 0) {
     return [];
   }
-
-  // Parse the message body and create a new Bid document
   let biddingObject = JSON.parse(response.Messages[0].Body);
   let bidding = new Bid(biddingObject);
   await bidding.save(); 
-
-  // Delete the processed message from the queue
+  let emailBidData = {
+    userEmail: biddingObject.user.email,
+    userName: biddingObject.user.name,
+    carName: biddingObject.car.carName,
+    bidAmount: biddingObject.bidAmount,
+    startDate: biddingObject.startDate,
+    endDate: biddingObject.endDate,
+    tripType: biddingObject.tripType,
+    ownerName: biddingObject.owner.name,
+    ownerEmail: biddingObject.owner.email,
+    ownerPhone: biddingObject.owner.phone,
+    carDetails: `${biddingObject.car.category} - ${biddingObject.car.numberPlate}`
+};
+  await sendBidAddedEmail(emailBidData);
   await processAndDeleteMessage(response.Messages[0]);
-  console.log("deleted");
   return response;
 };
 

@@ -77,9 +77,9 @@ const carSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  features: {
+  selectedFeatures: {
     type: Array,
-    // required: true
+    required: true
   },
   finePercentage:{
     type: Number,

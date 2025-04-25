@@ -5,10 +5,7 @@ myApp.factory("LocationFactory", ['$q', '$http', 'CITIES', function($q, $http, C
   // List of cities where our service is available
   const metroCities = CITIES;
 
-  /**
-   * Gets user's current city using browser location
-   * @returns {Promise} Promise that resolves with city name or error message
-   */
+  
   function getCityUsingGeolocation() {
     const deferred = $q.defer();
 

@@ -7,7 +7,8 @@ myApp.service("AuthService", [
   "$state",
   "$http",
   "ToastService", 
-  function($q, $state, $http, ToastService) {
+  "BASE_URL",
+  function($q, $state, $http, ToastService,BASE_URL) {
     // ==========================================
     // User Authentication
     // ==========================================
@@ -24,7 +25,7 @@ myApp.service("AuthService", [
     this.registerUser = function(user) {
       let deferred = $q.defer();
       
-      $http.post("http://localhost:8000/api/auth/signup", user)
+      $http.post(`${BASE_URL}/api/auth/signup`, user)
         .then((response) => {
           deferred.resolve(response);
         })
@@ -44,7 +45,7 @@ myApp.service("AuthService", [
     this.loginUser = function(loginData) {
       let deferred = $q.defer();
       
-      $http.post("http://localhost:8000/api/auth/login", loginData)
+      $http.post(`${BASE_URL}/api/auth/login`, loginData)
         .then((response) => {
           // Return the complete response data without storing token
           deferred.resolve(response.data);
@@ -66,7 +67,7 @@ myApp.service("AuthService", [
     this.userProfile = function() {
       let deferred = $q.defer();
       
-      $http.get("http://localhost:8000/api/auth/profile")
+      $http.get(`${BASE_URL}/api/auth/profile`)
         .then((response) => {
           deferred.resolve(response.data.userData);
         })
@@ -84,7 +85,7 @@ myApp.service("AuthService", [
     this.requireRole = function(requiredRole) {
       const deferred = $q.defer();
       
-      $http.get("http://localhost:8000/api/auth/profile")
+      $http.get(`${BASE_URL}/api/auth/profile`)
         .then((response) => {
           let user = response.data.userData;
           if (user.role === requiredRole) {

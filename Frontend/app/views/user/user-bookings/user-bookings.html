@@ -18,9 +18,16 @@
   <!-- Filter and Sort Controls - All in one row -->
   <div class="panel panel-default" ng-hide="isLoading">
     <div class="panel-heading">
-      <h3 class="panel-title"><i class="fa fa-filter"></i> Filter & Sort</h3>
+      <h3 class="panel-title">
+        <i class="fa fa-filter"></i> Filter & Sort
+        <button class="btn btn-link pull-right visible-xs visible-sm" 
+                ng-click="isFilterVisible = !isFilterVisible"
+                style="margin: -5px -10px; padding: 5px 10px; color: inherit;">
+          <i class="fa" ng-class="{'fa-chevron-down': !isFilterVisible, 'fa-chevron-up': isFilterVisible}"></i>
+        </button>
+      </h3>
     </div>
-    <div class="panel-body">
+    <div class="panel-body" ng-class="{'hidden-xs hidden-sm': !isFilterVisible}">
       <div class="row">
         <!-- Search Bar -->
         <div class="col-md-4">

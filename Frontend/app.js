@@ -22,3 +22,50 @@ myApp.config(['$httpProvider', function($httpProvider) {
 
   $httpProvider.interceptors.push('AuthInterceptor');
 }]);
+
+myApp.controller('MainController', ['$scope', 'AuthService', 'ToastService', 
+function($scope, AuthService, ToastService) {
+  
+  let socket = null;
+  let currentUser = null;
+
+  const initSocket = function(user) {
+    if (!socket) {
+      socket = io("http://127.0.0.1:3000");
+      currentUser = user;
+      
+      socket.on('connect', function() {
+        console.log('Socket connected');
+        // Join user's room after successful connection
+        socket.emit('joinUserRoom', user._id);
+      });
+      
+      // Listen for new bid notifications
+      socket.on('newBid', function(data) {
+        // Only show notification if it's for the current user
+        if (data.userId === currentUser._id) {
+          ToastService.success(data.message || 'Bid placed successfully!', 3000);
+        }
+      });
+      
+      // Handle connection error
+      socket.on('connect_error', function(error) {
+        console.error('Socket connection error:', error);
+      });
+    }
+  };
+
+  // Initialize on app start
+  $scope.init = function() {
+    AuthService.userProfile().then((user) => {
+      if (user) {
+        initSocket(user);
+      }
+    })
+    .catch((error) => {
+      console.log("Please login");
+    });
+  };
+
+  $scope.init();
+}]);

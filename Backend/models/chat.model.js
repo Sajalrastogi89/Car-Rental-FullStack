@@ -74,7 +74,7 @@ const carSubModelSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  features: {
+  selectedFeatures: {
     type: Array,
     required: true
   },
@@ -84,10 +84,6 @@ const chatSchema = new mongoose.Schema({
   car: carSubModelSchema,
   user: userSubModelSchema,
   owner: userSubModelSchema,
-  lastMessage: {
-    type: String,
-    trim: true
-  },
 },
 {
   timestamps: true

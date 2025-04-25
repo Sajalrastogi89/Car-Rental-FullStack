@@ -3,7 +3,11 @@
 <div class="container" ng-init="init()">
   <!-- Page Header -->
   <div class="page-header">
-    <h1>Bookings <small>Manage your car bookings</small></h1>
+    <h1 class="visible-md visible-lg">Bookings <small>Manage your car bookings</small></h1>
+    <h2 class="visible-xs visible-sm" style="margin-top: 10px; font-size: 24px;">
+      Bookings 
+      <small style="font-size: 16px;">Manage your car bookings</small>
+    </h2>
   </div>
 
   <!-- Loading State -->
@@ -17,9 +21,20 @@
 
   <!-- Content Area (hidden while loading) -->
   <div ng-hide="isLoading">
-    <!-- Filter Panel -->
+    <!-- Filters and Controls -->
     <div class="panel panel-default">
-      <div class="panel-body">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <i class="fa fa-filter"></i> Filters
+          <!-- Mobile Toggle Button -->
+          <button class="btn btn-link pull-right visible-xs visible-sm" 
+                  ng-click="isFilterVisible = !isFilterVisible"
+                  style="margin: -5px -10px; padding: 5px 10px; color: inherit;">
+            <i class="fa" ng-class="{'fa-chevron-down': !isFilterVisible, 'fa-chevron-up': isFilterVisible}"></i>
+          </button>
+        </h3>
+      </div>
+      <div class="panel-body" ng-class="{'hidden-xs hidden-sm': !isFilterVisible}">
         <div class="row">
           <div class="col-md-4">
             <div class="form-group">

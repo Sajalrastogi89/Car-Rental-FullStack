@@ -26,15 +26,18 @@ myApp.component("bookingDetailsModal", {
       
       <!-- Bookings List -->
       <div ng-if="$ctrl.resolve.dataObject && $ctrl.resolve.dataObject.length > 0" style="max-height: 400px; overflow-y: auto;">
-        <div class="panel panel-default" ng-repeat="bid in $ctrl.resolve.dataObject | orderBy:'-bookingDate'" style="margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="panel panel-default" ng-repeat="booking in $ctrl.resolve.dataObject | orderBy:'-bookingDate'" style="margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <div class="panel-heading" ng-class="{
+            'panel-success': booking.paymentStatus === 'paid',
+            'panel-warning': booking.paymentStatus === 'pending'
+          }" style="display: flex; justify-content: space-between; align-items: center;">
             <h4 class="panel-title">
-              <i class="fa fa-calendar"></i> {{bid.startDate | date:'MMM dd, yyyy'}} 
-              <span class="text-muted">to</span> {{bid.endDate | date:'MMM dd, yyyy'}}
+              <i class="fa fa-calendar"></i> {{booking.startDate | date:'MMM dd, yyyy'}} 
+              <span class="text-muted">to</span> {{booking.endDate | date:'MMM dd, yyyy'}}
             </h4>
-            <span ng-class="{'label label-success': bid.paymentStatus==='paid', 'label label-warning': bid.paymentStatus==='pending'}">
-              <i class="fa" ng-class="{'fa-check-circle': bid.paymentStatus, 'fa-clock-o': !bid.paymentStatus}"></i>
-              {{bid.paymentStatus==='paid' ? 'Paid' : 'Payment Pending'}}
+            <span ng-class="{'label label-success': booking.paymentStatus==='paid', 'label label-warning': booking.paymentStatus==='pending'}">
+              <i class="fa" ng-class="{'fa-check-circle': booking.paymentStatus, 'fa-clock-o': !booking.paymentStatus}"></i>
+              {{booking.paymentStatus==='paid' ? 'Paid' : 'Payment Pending'}}
             </span>
           </div>
           <div class="panel-body">
@@ -42,36 +45,36 @@ myApp.component("bookingDetailsModal", {
               <!-- Customer Details -->
               <div class="col-md-4">
                 <h5><i class="fa fa-user text-muted"></i> Customer</h5>
-                <p style="margin-bottom: 5px;"><strong>{{bid.user.name || 'Unknown'}}</strong></p>
+                <p style="margin-bottom: 5px;"><strong>{{booking.user.name || 'Unknown'}}</strong></p>
                 </p>
-                <p style="margin-bottom: 5px;" ng-if="bid.user.email">
-                  <i class="fa fa-envelope text-muted"></i> {{bid.user.email}}
+                <p style="margin-bottom: 5px;" ng-if="booking.user.email">
+                  <i class="fa fa-envelope text-muted"></i> {{booking.user.email}}
                 </p>
               </div>
               
               <!-- Car Details -->
               <div class="col-md-4">
                 <h5><i class="fa fa-car text-muted"></i> Vehicle</h5>
-                <p style="margin-bottom: 5px;"><strong>{{bid.car.carName || 'Unknown'}}</strong></p>
-                <p style="margin-bottom: 5px;">{{bid.car.category || ''}}</p>
+                <p style="margin-bottom: 5px;"><strong>{{booking.car.carName || 'Unknown'}}</strong></p>
+                <p style="margin-bottom: 5px;">{{booking.car.category || ''}}</p>
               </div>
               
               <!-- Payment Details -->
               <div class="col-md-4">
                 <h5><i class="fa fa-money text-muted"></i> Payment</h5>
-                <h4 class="text-success" style="margin-top: 5px; margin-bottom: 10px;" ng-show="bid.totalAmount">
-                   {{bid.totalAmount | currency:"₹"}}
+                <h4 class="text-success" style="margin-top: 5px; margin-bottom: 10px;" ng-show="booking.totalAmount">
+                   {{booking.totalAmount | currency:"₹"}}
                 </h4>
-                <h4 class="text-danger" style="margin-top: 5px; margin-bottom: 10px;" ng-hide="bid.totalAmount">
+                <h4 class="text-danger" style="margin-top: 5px; margin-bottom: 10px;" ng-hide="booking.totalAmount">
                    {{"In Progress"}}
                 </h4>
                 <p style="margin-bottom: 0;">
                   <span class="label" ng-class="{
-                    'label-success': bid.status === 'accepted',
-                    'label-danger': bid.status === 'rejected',
-                    'label-warning': bid.status === 'pending',
-                    'label-info': bid.status === 'completed'
-                  }">{{bid.status | uppercase}}</span>
+                    'label-success': booking.status === 'accepted',
+                    'label-danger': booking.status === 'rejected',
+                    'label-warning': booking.status === 'pending',
+                    'label-info': booking.status === 'completed'
+                  }">{{booking.status | uppercase}}</span>
                 </p>
               </div>
             </div>

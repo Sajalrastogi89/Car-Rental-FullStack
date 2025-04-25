@@ -60,6 +60,10 @@ const carSubModelSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
+  numberPlate:{
+    type: String,
+    required: true,
+  },
 });
 
 const userSubModelSchema = new mongoose.Schema({

@@ -1,32 +1,13 @@
-/**
- * @description Controller for managing chat functionality and message conversations
- * @module controllers/chat
- */
-
-// Import required models
 const Chat = require('../models/chat.model');
 const Conversation = require('../models/conversation.model');
 const Attachment = require('../models/attachment.model');
 
 /**
  * @description Create a new chat between user and car owner
- * @function addChat
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {Object} req.body.car - Car information object
- * @param {string} req.body.car._id - Car ID
- * @param {Object} req.body.owner - Car owner information
- * @param {string} req.body.owner._id - Owner ID
- * @param {string} req.body.lastMessage - Last message content (optional)
- * @param {Date} req.body.lastMessageTime - Timestamp of last message (optional)
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and message
  */
 let addChat = async (req, res) => {
   try {
-    const { car, owner, lastMessage, lastMessageTime } = req.body;
+    const { car, owner } = req.body;
     const user = req.user;
 
     // Create query object to check for existing chat
@@ -46,9 +27,7 @@ let addChat = async (req, res) => {
     const newChat = new Chat({
       car,
       user,
-      owner,
-      lastMessage,
-      lastMessageTime
+      owner
     });
     await newChat.save();
 
@@ -61,12 +40,6 @@ let addChat = async (req, res) => {
 
 /**
  * @description Get all chats for the authenticated user
- * @function getChats
- * @param {Object} req - Express request object
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with array of chat objects
  */
 let getChats = async (req, res) => {
   try {
@@ -82,22 +55,10 @@ let getChats = async (req, res) => {
 
 /**
  * @description Add a new message to an existing chat
- * @function addMessage
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.message - Message content
- * @param {string} req.body.imageUrl - URL of attached image (if present)
- * @param {boolean} req.body.isImage - Flag indicating if message has an image
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Chat ID
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and message
  */
 let addMessage = async (req, res) => {
   try {
-    let { message, imageUrl, isImage } = req.body;
+    let { message, imageUrl } = req.body;
     const chatId = req.params.id;
     const userId = req.user._id;
     
@@ -112,7 +73,7 @@ let addMessage = async (req, res) => {
     }
 
     let attachment;
-    if(isImage){
+    if(imageUrl){
         attachment = new Attachment({
         imageUrl,
         chatId,
@@ -146,12 +107,6 @@ let addMessage = async (req, res) => {
 
 /**
  * @description Get all messages in a conversation for a specific chat
- * @function getConversations
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Chat ID to retrieve conversations for
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with array of conversation messages
  */
 let getConversations = async (req, res) => {
   try {

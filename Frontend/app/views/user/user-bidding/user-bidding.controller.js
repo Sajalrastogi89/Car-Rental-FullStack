@@ -133,8 +133,5 @@ myApp.controller("userBiddingController", [
       let diff = Math.abs(end - start); // Total milliseconds
       return Math.ceil(diff / (1000 * 3600 * 24)) + 1; // Add 1 to include both start and end days
     };
-
-    // Initialize controller
-    $scope.init();
   },
 ]);

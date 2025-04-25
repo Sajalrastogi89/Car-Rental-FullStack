@@ -279,11 +279,13 @@
       <div
         class="col-md-4 col-sm-12"
         ng-repeat="car in filteredCars = (cars)"
-        style="margin-bottom: 20px"
+        style="cursor: pointer; margin-bottom: 20px"
+        
       >
+      <div ng-click="openBestBidsModal(car)">
         <!-- Car Card Component -->
         <card car="car" show-disabled="true"></card>
-
+        </div>
         <!-- Action Buttons with UI Bootstrap -->
         <div class="btn-group btn-group-justified">
           <div class="btn-group">

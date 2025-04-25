@@ -5,7 +5,8 @@
 myApp.service('CarService', [
   "$http",
   "$q",
-  function($http, $q) {
+  "BASE_URL",
+  function($http, $q,BASE_URL) {
     // ==========================================
     // Car Management
     // ==========================================
@@ -29,7 +30,7 @@ myApp.service('CarService', [
         };
       }
       
-      $http.post("http://localhost:8000/api/car/addCar", car, config)
+      $http.post(`${BASE_URL}/api/car/addCar`, car, config)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -48,9 +49,10 @@ myApp.service('CarService', [
       let deferred = $q.defer();
       let config = { params };
       
-      $http.get("http://localhost:8000/api/car/getCars", config)
+      $http.get(`${BASE_URL}/api/car/getCars`, config)
         .then((response) => {
           let carsData = response.data;
+          console.log("carsData",carsData);
           // Add fuel pump data to each car
           carsData.cars.forEach((car) => {
             const fuelData = this.getFuelPumpData(car.fuelType);
@@ -93,7 +95,7 @@ myApp.service('CarService', [
     this.getCar = function(id) {
       let deferred = $q.defer();
       
-      $http.get(`http://localhost:8000/api/car/carId/${id}`)
+      $http.get(`${BASE_URL}/api/car/carId/${id}`)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -112,7 +114,7 @@ myApp.service('CarService', [
     this.updateCar = function(id, car) {
       let deferred = $q.defer();
       
-      $http.patch(`http://localhost:8000/api/car/updateCar/${id}`, car)
+      $http.patch(`${BASE_URL}/api/car/updateCar/${id}`, car)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -130,7 +132,7 @@ myApp.service('CarService', [
     this.deleteCar = function(id) {
       let deferred = $q.defer();
       
-      $http.post(`http://localhost:8000/api/car/deleteCar/${id}`, {})
+      $http.post(`${BASE_URL}/api/car/deleteCar/${id}`, {})
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -152,7 +154,7 @@ myApp.service('CarService', [
     this.getBookedDates = function(id) {
       let deferred = $q.defer();
       
-      $http.get(`http://localhost:8000/api/booking/bookedDates/${id}`)
+      $http.get(`${BASE_URL}/api/booking/bookedDates/${id}`)
         .then((response) => {
           deferred.resolve(response.data);
         })

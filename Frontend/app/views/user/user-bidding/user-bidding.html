@@ -18,9 +18,16 @@
   <!-- Filter and Sort Controls - All in one row -->
   <div class="panel panel-default" ng-hide="isLoading">
     <div class="panel-heading">
-      <h3 class="panel-title"><i class="fa fa-filter"></i> Filter & Sort</h3>
+      <h3 class="panel-title"><i class="fa fa-filter"></i> Filters
+        <!-- Mobile Toggle Button -->
+        <button class="btn btn-link pull-right visible-xs visible-sm" 
+                ng-click="isFilterVisible = !isFilterVisible"
+                style="margin: -5px -10px; padding: 5px 10px; color: inherit;">
+          <i class="fa" ng-class="{'fa-chevron-down': !isFilterVisible, 'fa-chevron-up': isFilterVisible}"></i>
+        </button>
+      </h3>
     </div>
-    <div class="panel-body">
+    <div class="panel-body" ng-class="{'hidden-xs hidden-sm': !isFilterVisible}">
       <div class="row">
         <!-- Search Bar -->
         <div class="col-md-4">
@@ -101,13 +108,18 @@
           <!-- Fixed the lessThan filter usage -->
           <div
             uib-accordion-group
-            class="panel-default"
+            class="panel"
             ng-repeat="bid in filteredBiddings = (biddings)"
+            ng-class="{
+              'panel-warning': bid.status === 'pending',
+              'panel-success': bid.status === 'accepted',
+              'panel-danger': bid.status === 'rejected'
+            }"
           >
             <!-- Accordion Heading -->
             <uib-accordion-heading>
               <div class="row">
-                <div class="col-md-6">
+                <div class="col-xs-7">
                   <i class="fa fa-car"></i>
                   <strong>{{ bid.car.carName }}</strong> - {{ bid.car.category }}
                   <span
@@ -129,7 +141,7 @@
                     {{bid.tripType === 'outStation' ? 'Outstation' : 'In-City'}}
                   </span>
                 </div>
-                <div class="col-md-6 text-right">
+                <div class="col-xs-5 text-right">
                   <span class="label label-primary" style="margin-left: 2px;">{{bid.bidAmount | currency:"₹"}}</span>
                   <span class="text-muted" style="margin-left: 2px;"><small>{{bid.startDate | date:'MMM d, y'}}</small></span>
                 </div>

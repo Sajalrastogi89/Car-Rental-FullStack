@@ -6,12 +6,12 @@ myApp.controller("ownerBookingController", [
   "$scope",
   "ToastService",
   "BookingService",
-  "$filter",
+  "PDFFactory",
   function (
     $scope,
     ToastService,
     BookingService,
-    $filter
+    PDFFactory
   ) {
     // ==========================================
     // State Management
@@ -247,7 +247,7 @@ myApp.controller("ownerBookingController", [
      */
     $scope.getInvoice = function(booking) {
       // Use the PDF Generator utility to create a professional invoice
-      const doc = window.PDFGenerator.generateBookingInvoice(booking, {
+      const doc = PDFFactory.generateBookingInvoice(booking, {
         // You can override default options here if needed
         companyName: "EZYCAR",
         includeTerms: true

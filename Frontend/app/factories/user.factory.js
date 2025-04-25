@@ -4,19 +4,11 @@
  * Uses prototype pattern for efficient method sharing across user instances
  * @module UserFactory
  */
-myApp.factory('UserFactory', ['$q', function($q) {
-  
+myApp.factory('UserFactory', ['$q', 'ToastService', function($q, ToastService) {
+  let currentUser = null;
+
   /**
    * User constructor function - Creates a new user instance with validation methods
-   * @constructor
-   * @param {Object} userData - Initial user data
-   * @param {string} [userData.firstName] - User's first name
-   * @param {string} [userData.lastName] - User's last name
-   * @param {string} [userData.email] - User's email address
-   * @param {string} [userData.password] - User's password
-   * @param {string} [userData.confirmPassword] - Password confirmation
-   * @param {string} [userData.phone] - User's phone number
-   * @param {string} [userData.role='user'] - User's role (user/owner)
    */
   function User(userData) {
     // Initialize with empty object if no data provided
@@ -67,12 +59,7 @@ myApp.factory('UserFactory', ['$q', function($q) {
   
   /**
    * Validate password strength and complexity
-   * Checks for length, uppercase, lowercase, numbers, and special characters
-   * @returns {Object} Validation result
-   * @returns {boolean} result.isValid - Whether the password is valid
-   * @returns {string} result.message - Validation message
-   * @returns {boolean} [result.suggestion] - Whether there's a suggestion for improvement
-   */
+  */
   User.prototype.validatePassword = function() {
     if (!this.password) {
       return {
@@ -118,9 +105,6 @@ myApp.factory('UserFactory', ['$q', function($q) {
   
   /**
    * Validate password confirmation matches password
-   * @returns {Object} Validation result
-   * @returns {boolean} result.isValid - Whether passwords match
-   * @returns {string} result.message - Validation message
    */
   User.prototype.validatePasswordMatch = function() {
     if (!this.confirmPassword) {
@@ -145,10 +129,7 @@ myApp.factory('UserFactory', ['$q', function($q) {
   
   /**
    * Validate phone number format
-   * Accepts formats: +91 9876543210, 9876543210, 987-654-3210
-   * @returns {Object} Validation result
-   * @returns {boolean} result.isValid - Whether the phone number is valid
-   * @returns {string} result.message - Validation message
+    * Accepts formats: +91 9876543210, 9876543210, 987-654-3210
    */
   User.prototype.validatePhone = function() {
     const phoneRegex = /^(\+\d{1,3}\s?)?\d{10}$|^\d{3}[-.]?\d{3}[-.]?\d{4}$/;

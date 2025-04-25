@@ -1,9 +1,3 @@
-/**
- * @description Controller for managing bidding operations and bid workflow
- * @module controllers/bidding
- */
-
-// Import required models and dependencies
 const Bid = require("../models/bidding.model");
 const Car = require("../models/car.model");
 const Booking = require("../models/booking.model");
@@ -14,17 +8,6 @@ const { sendBidToQueue } = require("../utils/sqs/producer");
 
 /**
  * @description Create a new bid for a car
- * @function addBid
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing bid details
- * @param {string} req.body.carId - ID of the car to bid on
- * @param {number} req.body.bidAmount - Bid amount offered by the user
- * @param {string} req.body.startDate - Requested start date for the booking
- * @param {string} req.body.endDate - Requested end date for the booking
- * @param {string} req.body.tripType - Type of trip (local or outStation)
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and bid data
  */
 let addBid = async (req, res) => {
   try {
@@ -47,9 +30,13 @@ let addBid = async (req, res) => {
     let carDetails = await Car.findOne(findObject);
     if (!carDetails) return res.status(404).json({ message: "Car not found" });
 
+
+
     // Extract owner details from car object
     let ownerDetails = carDetails.owner;
     delete carDetails.owner;
+    
+
     
     // Create bidding object with all necessary information
     let biddingObject = {
@@ -59,11 +46,9 @@ let addBid = async (req, res) => {
       status: "pending",
       tripType,
       user: req.user,
-      car: carDetails,
+      car: carDetails, 
       owner: ownerDetails,
     };
-
-   
 
     // Send bid to SQS queue for processing
     let sqs_response = await sendBidToQueue(biddingObject);
@@ -84,14 +69,6 @@ let addBid = async (req, res) => {
 
 /**
  * @description Accept a bid and create a booking
- * @function acceptBid
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Bid ID to accept
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID of car owner
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with booking and affected bids information
  */
 let acceptBid = async (req, res) => {
   try {
@@ -149,14 +126,6 @@ let acceptBid = async (req, res) => {
 
 /**
  * @description Reject a bid
- * @function rejectBid
- * @param {Object} req - Express request object
- * @param {Object} req.params - URL parameters
- * @param {string} req.params.id - Bid ID to reject
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {string} req.user._id - User ID of car owner
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with status and updated bid
  */
 let rejectBid = async (req, res) => {
   try {
@@ -197,6 +166,8 @@ let rejectBid = async (req, res) => {
       endDate: booking.endDate,
       city: booking.car.city,
       image: booking.car.imageUrl,
+    }).catch(error => {
+      console.error("Error sending rejection email:", error);
     });
 
     // Send success response
@@ -217,18 +188,6 @@ let rejectBid = async (req, res) => {
 
 /**
  * @description Get all bids with filtering, sorting and pagination
- * @function getAllBids
- * @param {Object} req - Express request object
- * @param {Object} req.query - Query parameters for filtering and pagination
- * @param {string} [req.query.carName] - Filter by car name (partial match)
- * @param {string} [req.query.status] - Filter by bid status
- * @param {string} [req.query.sortBy=createdAt] - Field to sort by
- * @param {number} [req.query.sortOrder=-1] - Sort order (1 for ascending, -1 for descending)
- * @param {number} [req.query.page=1] - Page number for pagination
- * @param {number} [req.query.limit=10] - Results per page
- * @param {Object} req.user - Authenticated user object from JWT middleware
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with filtered bids and metadata
  */
 let getAllBids = async (req, res) => {
   try {
@@ -311,12 +270,54 @@ let getAllBids = async (req, res) => {
   }
 };
 
+
+let getBestBidsByCarId = async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const ownerId = req.user._id;
+    
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const status = "pending";
+    let bids = await Bid.aggregate([
+      {
+        $match: {
+          "car._id": new mongoose.Types.ObjectId(carId),
+          "owner._id": ownerId,
+          status: status,
+          startDate: {
+            $gte: startDate,
+            $lte: endDate
+          }
+        }
+      },
+      {
+        $sort: {
+          endDate: 1
+        }
+      }
+    ]);
+    res.status(200).json({ 
+      success: true, 
+      bids
+    });
+  } catch (error) {
+    console.error('Error in getBestBidsByCarId:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message,
+    });
+  }
+};
+
+
 /**
  * @description Helper function to accept a bid, create a booking, and reject overlapping bids
- * @function addBookingAndDeleteOverlappingBids
- * @param {Object} findObject - Query object to find the bid to accept
- * @returns {Object} Object containing booking, accepted bid ID, and rejected bid IDs
- * @throws {Error} If bid is not found or any other error occurs
  */
 let addBookingAndDeleteOverlappingBids = async (findObject) => {
   // Start a MongoDB session for transaction
@@ -330,8 +331,10 @@ let addBookingAndDeleteOverlappingBids = async (findObject) => {
     let bid = await Bid.findOneAndUpdate(
       findObject,
       { status: "accepted" },
-      { new: true, session }
+      { session }
     );
+
+   
     
     // Validate bid exists
     if (!bid) throw new Error("Bid not found");
@@ -346,10 +349,8 @@ let addBookingAndDeleteOverlappingBids = async (findObject) => {
         endDate: { $gte: bid.startDate },
         status: "pending",
         _id: { $ne: acceptedBidId },
-      },
-      { _id: 1 }
+      }
     ).session(session);
-
 
     // Extract just the IDs of overlapping bids
     const rejectedBidIds = overlappingBids.map(b => b._id);
@@ -361,6 +362,27 @@ let addBookingAndDeleteOverlappingBids = async (findObject) => {
         { status: "rejected" },
         { session }
       );
+
+      // Send rejection emails to all overlapping bids
+      const emailPromises = overlappingBids.map(overlappingBid => 
+        mailService.sendBidRejectedEmail({
+          userEmail: overlappingBid.user.email,
+          userName: overlappingBid.user.name,
+          carName: overlappingBid.car.carName + " " + overlappingBid.car.category,
+          bidAmount: overlappingBid.bidAmount,
+          ownerName: overlappingBid.owner.name,
+          ownerEmail: overlappingBid.owner.email,
+          startDate: overlappingBid.startDate,
+          endDate: overlappingBid.endDate,
+          city: overlappingBid.car.city,
+          image: overlappingBid.car.imageUrl,
+        })
+      );
+
+      // Wait for all email promises to settle
+      Promise.allSettled(emailPromises).catch(error => {
+        console.error("Error sending rejection emails:", error);
+      });
     }
 
     // Create a new booking based on the accepted bid
@@ -391,5 +413,6 @@ module.exports = {
   addBid, 
   acceptBid, 
   rejectBid, 
-  getAllBids 
+  getAllBids,
+  getBestBidsByCarId
 };

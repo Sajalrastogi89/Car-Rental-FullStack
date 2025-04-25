@@ -5,7 +5,8 @@
 myApp.service("BiddingService", [
   "$q",
   "$http",
-  function ($q, $http) {
+  "BASE_URL",
+  function ($q, $http, BASE_URL) {
     // ==========================================
     // Bid Creation and Retrieval
     // ==========================================
@@ -21,7 +22,7 @@ myApp.service("BiddingService", [
     this.addBid = function (bid) {
       let deferred = $q.defer();
       $http
-        .post(`http://localhost:8000/api/bidding/addBidding`, bid)
+        .post(`${BASE_URL}/api/bidding/addBidding`, bid)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -45,7 +46,7 @@ myApp.service("BiddingService", [
         params
       };
       $http
-        .get(`http://localhost:8000/api/bidding/getAllBids`, config)
+        .get(`${BASE_URL}/api/bidding/getAllBids`, config)
         .then((response) => {
           deferred.resolve(response.data);
         })
@@ -54,6 +55,22 @@ myApp.service("BiddingService", [
         });
       return deferred.promise;
     };
+
+    this.getBestBidsByCarId = function (carId) {
+      console.log("carId",carId);
+      let deferred = $q.defer();
+      $http
+        .get(`${BASE_URL}/api/bidding/getBestBidsByCarId/${carId}`)
+        .then((response) => {
+          console.log(response);
+          deferred.resolve(response.data);
+        })
+        .catch((error) => {
+          deferred.reject(error);
+        });
+      return deferred.promise;
+    };
+    
 
     // ==========================================
     // Bid Status Management
@@ -68,7 +85,7 @@ myApp.service("BiddingService", [
       let deffered = $q.defer();
       $http
         .post(
-          `http://localhost:8000/api/bidding/acceptBid/${id}`,
+          `${BASE_URL}/api/bidding/acceptBid/${id}`,
           {}          
         )
         .then((response) => {
@@ -89,7 +106,7 @@ myApp.service("BiddingService", [
       let deferred = $q.defer();
       $http
         .put(
-          `http://localhost:8000/api/bidding/rejectBid/${id}`,
+          `${BASE_URL}/api/bidding/rejectBid/${id}`,
           {}          
         )
         .then((response) => {

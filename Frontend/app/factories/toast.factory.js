@@ -9,12 +9,7 @@ myApp.factory("ToastService", [function() {
 
   /**
    * Default configuration for all toast notifications
-   * @constant {Object}
-   * @property {boolean} close - Whether the toast can be manually closed
-   * @property {string} gravity - Vertical position ('top' or 'bottom')
-   * @property {string} position - Horizontal position ('left', 'center', or 'right')
-   * @property {boolean} stopOnFocus - Whether to pause the timer when hovering
-   */
+  */
   const defaultOptions = {
     close: true,
     gravity: 'top',
@@ -60,7 +55,7 @@ myApp.factory("ToastService", [function() {
       ...defaultOptions,
       duration: time,
       text: message,
-      backgroundColor: '#2196f3' // Material Design blue (fixed from green)
+      backgroundColor: '#F0AD4E' 
     }).showToast();
   };
 
